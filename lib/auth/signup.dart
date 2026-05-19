@@ -5,8 +5,6 @@ import 'package:frontend/auth/login.dart';
 import 'package:frontend/wrapper.dart';
 import 'package:get/get.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 
 class Signup extends StatefulWidget {
   const Signup({super.key});
@@ -34,16 +32,44 @@ class _SignupState extends State<Signup> {
         barrierDismissible: false,
       );
 
-      final GoogleSignIn googleSignIn = GoogleSignIn();
+      final GoogleSignIn googleSignIn = GoogleSignIn(
+        serverClientId:
+            '383298804056-3v7k9oefmo2bbu297s5b8vrb5looiqll.apps.googleusercontent.com',
+      );
+      
+      debugPrint('Starting Google Sign-In...');
       final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+      debugPrint('googleUser returned: ${googleUser?.email ?? "null"}');
 
       if (googleUser == null) {
         Get.back();
+        debugPrint('Google Sign-In cancelled by user or failed silently.');
+        Get.snackbar(
+          t("Cancelled", "ยกเลิก"),
+          t("Google sign-in was cancelled or failed",
+              "การเข้าสู่ระบบด้วย Google ถูกยกเลิกหรือล้มเหลว"),
+          backgroundColor: Colors.orange,
+          colorText: Colors.white,
+        );
         return;
       }
 
       final GoogleSignInAuthentication googleAuth =
           await googleUser.authentication;
+      debugPrint(
+          'idToken null? ${googleAuth.idToken == null} | accessToken null? ${googleAuth.accessToken == null}');
+
+      if (googleAuth.idToken == null) {
+        Get.back();
+        Get.snackbar(
+          t("Error", "เกิดข้อผิดพลาด"),
+          t("Missing ID token from Google. Check serverClientId / SHA-1.",
+              "ไม่ได้รับ ID token จาก Google กรุณาตรวจสอบ serverClientId / SHA-1"),
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+        return;
+      }
 
       final AuthCredential credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
@@ -52,33 +78,53 @@ class _SignupState extends State<Signup> {
       UserCredential userCredential =
           await FirebaseAuth.instance.signInWithCredential(credential);
       final user = userCredential.user;
+      debugPrint("Google Sign-In successful: ${user?.email}");
+      
       if (user != null) {
-        String displayName = user.displayName?.trim() ?? "Unknown User";
-        print(displayName);
+        // If they already have an account, sign them in directly and go to the wrapper/home screen
+        if (userCredential.additionalUserInfo?.isNewUser == false) {
+          Get.back(); // dismiss loading dialog
+          Get.offAll(() => const Wrapper());
+          return;
+        }
+
+        String displayName = user.displayName?.trim() ?? "";
+        if (displayName.isEmpty) {
+          displayName = "Unknown User";
+        }
         List<String> nameParts = displayName.split(' ');
         String fname = nameParts[0];
-        String sname =
-            nameParts.length > 1 ? nameParts.sublist(1).join(' ') : "";
-        // await postdata(user.uid, fname, sname, user.email ?? "");
+
+        Get.back();
+        Get.to(() => GenderPage(
+              uid: user.uid,
+              username: fname,
+              email: user.email ?? "",
+              loginProvider: 'google',
+              isEnglish: isEnglish,
+            ));
+        return;
       }
 
-      await FirebaseAuth.instance.signInWithCredential(credential);
-
       Get.back();
-      Get.offAll(() => Wrapper());
-    } catch (e) {
+    } on Exception catch (e) {
       Get.back();
-      print("Error: $e");
+      debugPrint("Detailed Google Sign-In Error: $e");
       Get.snackbar(
-        t("Login Failed", "เข้าสู่ระบบไม่สำเร็จ"),
+        t("Sign up failed", "สมัครสมาชิกไม่สำเร็จ"),
         t("An error occurred: $e", "เกิดข้อผิดพลาด: $e"),
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
+    } catch (e) {
+      Get.back();
+      debugPrint("Unknown Error: $e");
+      Get.snackbar(t("Error", "เกิดข้อผิดพลาด"), "Unknown error occurred",
+          backgroundColor: Colors.red, colorText: Colors.white);
     }
   }
 
-  sigup_email() async {
+  signup_email() async {
     if (username.text.trim().isEmpty ||
         email.text.trim().isEmpty ||
         password.text.isEmpty ||
@@ -100,36 +146,52 @@ class _SignupState extends State<Signup> {
       return;
     }
 
-    Get.to(() => GenderPage(
-          username: username.text.trim(),
-          email: email.text.trim(),
-          password: password.text,
-          isEnglish: isEnglish,
-        ));
+    try {
+      Get.dialog(
+        const Center(child: CircularProgressIndicator()),
+        barrierDismissible: false,
+      );
+
+      final UserCredential userCredential =
+          await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: email.text.trim(),
+        password: password.text,
+      );
+      final String uid = userCredential.user!.uid;
+
+      Get.back();
+      Get.to(() => GenderPage(
+            uid: uid,
+            username: username.text.trim(),
+            email: email.text.trim(),
+            loginProvider: 'email',
+            isEnglish: isEnglish,
+          ));
+    } on FirebaseAuthException catch (e) {
+      Get.back();
+      String message = t("Sign up failed", "สมัครสมาชิกไม่สำเร็จ");
+      if (e.code == 'email-already-in-use') {
+        message = t("This email is already in use", "อีเมลนี้ถูกใช้งานไปแล้ว");
+      } else if (e.code == 'weak-password') {
+        message = t("Password must be at least 6 characters",
+            "รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร");
+      } else if (e.code == 'invalid-email') {
+        message = t("Invalid email format", "รูปแบบอีเมลไม่ถูกต้อง");
+      }
+      Get.snackbar(
+        t("Error", "เกิดข้อผิดพลาด"),
+        message,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    } catch (e) {
+      Get.back();
+      Get.snackbar(t("Error", "เกิดข้อผิดพลาด"), e.toString(),
+          backgroundColor: Colors.red, colorText: Colors.white);
+    }
   }
 
-  // postdata(String uid, String name, String surname, String email) async {
-  //   try {
-  //     var response = await http.post(
-  //       Uri.parse('http://10.0.2.2:3000/users'),
-  //       headers: <String, String>{
-  //         'Content-Type': 'application/json; charset=UTF-8',
-  //       },
-  //       body: jsonEncode({
-  //         'uid': uid,
-  //         'name': name,
-  //         'surname': surname,
-  //         'email': email,
-  //       }),
-  //     );
-  //     print(response.statusCode);
-  //     if (response.statusCode == 200) {
-  //       print("complete sign up");
-  //     }
-  //   } catch (e) {
-  //     print('Error: $e');
-  //   }
-  // }
+ 
 
   Widget _buildTextField({
     required TextEditingController controller,
@@ -307,7 +369,7 @@ class _SignupState extends State<Signup> {
                       width: double.infinity,
                       height: 52,
                       child: ElevatedButton(
-                        onPressed: sigup_email,
+                        onPressed: signup_email,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF1A6B45),
                           shape: RoundedRectangleBorder(

@@ -3,16 +3,18 @@ import 'package:frontend/auth/age.dart';
 import 'package:get/get.dart';
 
 class GenderPage extends StatefulWidget {
+  final String uid;
   final String username;
   final String email;
-  final String password;
+  final String loginProvider;
   final bool isEnglish;
 
   const GenderPage({
     super.key,
+    required this.uid,
     required this.username,
     required this.email,
-    required this.password,
+    required this.loginProvider,
     this.isEnglish = true,
   });
 
@@ -34,10 +36,11 @@ class _GenderPageState extends State<GenderPage> {
 
   void _proceed(String? gender) {
     Get.to(() => Agepage(
+          uid: widget.uid,
           username: widget.username,
           email: widget.email,
-          password: widget.password,
           gender: gender,
+          loginProvider: widget.loginProvider,
           isEnglish: isEnglish,
         ));
   }

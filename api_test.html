@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>API Tester — Thai Vowel Backend</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; background: #eef8f3; color: #222; padding: 24px; }
+    h1 { color: #1a7a50; margin-bottom: 24px; font-size: 1.4rem; }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.08);
+    }
+    .card h2 { font-size: 1rem; color: #1a6b45; margin-bottom: 14px; }
+
+    .row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+    .field { display: flex; flex-direction: column; flex: 1 1 180px; }
+    label { font-size: .75rem; font-weight: 600; color: #555; margin-bottom: 4px; }
+    input, select {
+      padding: 8px 10px;
+      border: 1px solid #cde7d8;
+      border-radius: 8px;
+      font-size: .9rem;
+      outline: none;
+      transition: border-color .15s;
+    }
+    input:focus, select:focus { border-color: #1a7a50; }
+
+    button {
+      background: #1a7a50;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 22px;
+      font-size: .9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    button:hover { background: #1a6b45; }
+    button:disabled { background: #aaa; cursor: not-allowed; }
+
+    .response {
+      margin-top: 14px;
+      background: #f4faf7;
+      border: 1px solid #cde7d8;
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: .82rem;
+      font-family: monospace;
+      white-space: pre-wrap;
+      word-break: break-all;
+      min-height: 48px;
+      color: #333;
+    }
+    .status-ok  { color: #1a7a50; font-weight: 700; }
+    .status-err { color: #c0392b; font-weight: 700; }
+
+    .base-row { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+    .base-row input { flex: 1; }
+    .base-row label { white-space: nowrap; font-size: .8rem; font-weight: 600; color: #555; }
+
+    hr { border: none; border-top: 1px solid #d5ede2; margin: 8px 0 16px; }
+  </style>
+</head>
+<body>
+
+<h1>API Tester — Thai Vowel Backend</h1>
+
+<div class="card">
+  <div class="base-row">
+    <label>Base URL</label>
+    <input id="baseUrl" value="http://127.0.0.1:4000" />
+    <button onclick="checkHealth()">Health check</button>
+  </div>
+  <div id="healthResponse" class="response" style="display:none"></div>
+</div>
+
+<!-- POST /users -->
+<div class="card">
+  <h2>POST /users — Create user</h2>
+  <hr />
+  <div class="row">
+    <div class="field">
+      <label>firebase_uid</label>
+      <input id="uid" value="test_uid_web_001" />
+    </div>
+    <div class="field">
+      <label>username</label>
+      <input id="username" value="WebTestUser" />
+    </div>
+  </div>
+  <div class="row">
+    <div class="field">
+      <label>email</label>
+      <input id="email" type="email" value="webtest@example.com" />
+    </div>
+    <div class="field">
+      <label>gender</label>
+      <select id="gender">
+        <option value="male">male</option>
+        <option value="female">female</option>
+        <option value="other">other</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>age</label>
+      <input id="age" type="number" value="21" min="5" max="90" />
+    </div>
+    <div class="field">
+      <label>login_provider</label>
+      <select id="loginProvider">
+        <option value="email">email</option>
+        <option value="google">google</option>
+      </select>
+    </div>
+  </div>
+  <button onclick="postUser()">Send POST /users</button>
+  <div id="postResponse" class="response" style="display:none"></div>
+</div>
+
+<script>
+  function base() {
+    return document.getElementById('baseUrl').value.replace(/\/$/, '');
+  }
+
+  function show(id, status, text) {
+    const el = document.getElementById(id);
+    el.style.display = 'block';
+    const cls = (status >= 200 && status < 300) ? 'status-ok' : 'status-err';
+    el.innerHTML = `<span class="${cls}">${status}</span>\n${text}`;
+  }
+
+  async function checkHealth() {
+    const id = 'healthResponse';
+    try {
+      const r = await fetch(base() + '/', { method: 'GET' });
+      const text = await r.text();
+      show(id, r.status, text);
+    } catch (e) {
+      show(id, 0, 'Connection failed: ' + e.message);
+    }
+  }
+
+  async function postUser() {
+    const id = 'postResponse';
+    const body = {
+      firebase_uid:   document.getElementById('uid').value,
+      username:       document.getElementById('username').value,
+      email:          document.getElementById('email').value,
+      gender:         document.getElementById('gender').value,
+      age:            parseInt(document.getElementById('age').value),
+      login_provider: document.getElementById('loginProvider').value,
+    };
+    try {
+      const r = await fetch(base() + '/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const text = await r.text();
+      let pretty = text;
+      try { pretty = JSON.stringify(JSON.parse(text), null, 2); } catch {}
+      show(id, r.status, pretty);
+    } catch (e) {
+      show(id, 0, 'Connection failed: ' + e.message);
+    }
+  }
+</script>
+</body>
+</html>

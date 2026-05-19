@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/wrapper.dart';
@@ -7,18 +6,20 @@ import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 
 class Agepage extends StatefulWidget {
+  final String uid;
   final String username;
   final String email;
-  final String password;
   final String? gender;
+  final String loginProvider;
   final bool isEnglish;
 
   const Agepage({
     super.key,
+    required this.uid,
     required this.username,
     required this.email,
-    required this.password,
     this.gender,
+    required this.loginProvider,
     this.isEnglish = true,
   });
 
@@ -65,56 +66,31 @@ class _AgepageState extends State<Agepage> {
         barrierDismissible: false,
       );
 
-      UserCredential userCredential =
-          await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: widget.email,
-        password: widget.password,
-      );
-
-      final uid = userCredential.user?.uid;
-      if (uid != null) {
-        await postdata(uid, widget.username, widget.email, widget.gender, selectedAge);
-      }
+      await postdata(widget.uid, widget.username, widget.email, widget.gender, selectedAge, widget.loginProvider);
 
       Get.back();
       Get.offAll(() => const Wrapper());
-    } on FirebaseAuthException catch (e) {
-      Get.back();
-      String message = t("Sign up failed", "สมัครสมาชิกไม่สำเร็จ");
-      if (e.code == 'email-already-in-use') {
-        message = t("This email is already in use", "อีเมลนี้ถูกใช้งานไปแล้ว");
-      } else if (e.code == 'weak-password') {
-        message = t("Password must be at least 6 characters",
-            "รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร");
-      } else if (e.code == 'invalid-email') {
-        message = t("Invalid email format", "รูปแบบอีเมลไม่ถูกต้อง");
-      }
-      Get.snackbar(
-        t("Error", "เกิดข้อผิดพลาด"),
-        message,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
     } catch (e) {
       Get.back();
-      Get.snackbar("Error", e.toString());
+      Get.snackbar(t("Error", "เกิดข้อผิดพลาด"), e.toString(),
+          backgroundColor: Colors.red, colorText: Colors.white);
     }
   }
 
-  Future<void> postdata(String uid, String name, String email, String? gender, int? age) async {
+  Future<void> postdata(String uid, String name, String email, String? gender, int? age, String loginProvider) async {
     try {
       var response = await http.post(
-        Uri.parse('http://10.0.2.2:3000/users'),
+        Uri.parse('http://10.0.2.2:4000/users'),
         headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
+          'Content-Type': 'application/json',
         },
         body: jsonEncode({
-          'uid': uid,
-          'name': name,
-          'surname': '',
+          'firebase_uid': uid,
+          'username': name,
           'email': email,
           'gender': gender,
           'age': age,
+          'login_provider': loginProvider,
         }),
       );
       print(response.statusCode);
@@ -180,7 +156,7 @@ class _AgepageState extends State<Agepage> {
               ),
               const SizedBox(height: 24),
               Expanded(
-                child: CupertinoPicker(
+                child: CupertinoPicker.builder(
                   scrollController: _scrollController,
                   itemExtent: 54,
                   onSelectedItemChanged: (index) =>
@@ -193,22 +169,24 @@ class _AgepageState extends State<Agepage> {
                       borderRadius: BorderRadius.circular(14),
                     ),
                   ),
-                  children: ages
-                      .map((age) => Center(
-                            child: Text(
-                              '$age',
-                              style: TextStyle(
-                                fontSize: selectedAge == age ? 30 : 22,
-                                fontWeight: selectedAge == age
-                                    ? FontWeight.bold
-                                    : FontWeight.normal,
-                                color: selectedAge == age
-                                    ? const Color(0xFF1A7A50)
-                                    : Colors.grey[400],
-                              ),
-                            ),
-                          ))
-                      .toList(),
+                  childCount: ages.length,
+                  itemBuilder: (context, index) {
+                    final age = ages[index];
+                    final isSelected = selectedAge == age;
+                    return Center(
+                      child: Text(
+                        '$age',
+                        style: TextStyle(
+                          fontSize: isSelected ? 30 : 22,
+                          fontWeight:
+                              isSelected ? FontWeight.bold : FontWeight.normal,
+                          color: isSelected
+                              ? const Color(0xFF1A7A50)
+                              : Colors.grey[400],
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ),
               const SizedBox(height: 20),
