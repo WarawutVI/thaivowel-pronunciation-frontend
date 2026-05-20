@@ -82,6 +82,99 @@ class PredictResult {
   }
 }
 
+class UserStreak {
+  final int currentStreak;
+  final int longestStreak;
+
+  const UserStreak({required this.currentStreak, required this.longestStreak});
+
+  factory UserStreak.fromJson(Map<String, dynamic> j) => UserStreak(
+        currentStreak: (j['current_streak'] ?? 0) as int,
+        longestStreak: (j['longest_streak'] ?? 0) as int,
+      );
+}
+
+class ProgressSummary {
+  final double overallAccuracy;
+  final int totalSessions;
+  final double bestAccuracy;
+  final double longAvgAccuracy;
+  final double shortAvgAccuracy;
+
+  const ProgressSummary({
+    required this.overallAccuracy,
+    required this.totalSessions,
+    required this.bestAccuracy,
+    required this.longAvgAccuracy,
+    required this.shortAvgAccuracy,
+  });
+
+  factory ProgressSummary.fromJson(Map<String, dynamic> j) => ProgressSummary(
+        overallAccuracy: (j['overall_accuracy'] ?? 0.0).toDouble(),
+        totalSessions: (j['total_sessions'] ?? 0) as int,
+        bestAccuracy: (j['best_accuracy'] ?? 0.0).toDouble(),
+        longAvgAccuracy: (j['long_avg_accuracy'] ?? 0.0).toDouble(),
+        shortAvgAccuracy: (j['short_avg_accuracy'] ?? 0.0).toDouble(),
+      );
+}
+
+class VowelStats {
+  final int vowelId;
+  final String symbol;
+  final String vowelType;
+  final int practiceCount;
+  final double avgAccuracy;
+
+  const VowelStats({
+    required this.vowelId,
+    required this.symbol,
+    required this.vowelType,
+    required this.practiceCount,
+    required this.avgAccuracy,
+  });
+
+  factory VowelStats.fromJson(Map<String, dynamic> j) => VowelStats(
+        vowelId: j['vowel_id'] as int,
+        symbol: j['symbol'] as String,
+        vowelType: j['vowel_type'] as String,
+        practiceCount: (j['practice_count'] ?? 0) as int,
+        avgAccuracy: (j['avg_accuracy'] ?? 0.0).toDouble(),
+      );
+}
+
+class SessionRecord {
+  final String symbol;
+  final String vowelType;
+  final double confidence;
+  final DateTime practicedAt;
+
+  const SessionRecord({
+    required this.symbol,
+    required this.vowelType,
+    required this.confidence,
+    required this.practicedAt,
+  });
+
+  factory SessionRecord.fromJson(Map<String, dynamic> j) => SessionRecord(
+        symbol: j['symbol'] as String,
+        vowelType: j['vowel_type'] as String,
+        confidence: (j['confidence'] ?? 0.0).toDouble(),
+        practicedAt: DateTime.parse(j['practiced_at'] as String),
+      );
+}
+
+class DailyTrend {
+  final DateTime date;
+  final double avgAccuracy;
+
+  const DailyTrend({required this.date, required this.avgAccuracy});
+
+  factory DailyTrend.fromJson(Map<String, dynamic> j) => DailyTrend(
+        date: DateTime.parse(j['date'] as String),
+        avgAccuracy: (j['avg_accuracy'] ?? 0.0).toDouble(),
+      );
+}
+
 class PracticeApi {
   // GET /vowels?type=short|long&firebase_uid=X
   static Future<List<VowelProgress>> fetchVowels(
@@ -165,5 +258,63 @@ class PracticeApi {
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'firebase_uid': firebaseUid}),
     );
+  }
+
+  // GET /user_streaks?firebase_uid=X
+  static Future<UserStreak> fetchStreak(String firebaseUid) async {
+    final uri = Uri.parse('$_base/user_streaks')
+        .replace(queryParameters: {'firebase_uid': firebaseUid});
+    final res = await http.get(uri);
+    if (res.statusCode != 200) throw Exception('Failed to load streak');
+    return UserStreak.fromJson(jsonDecode(res.body) as Map<String, dynamic>);
+  }
+
+  // GET /progress/summary?firebase_uid=X
+  static Future<ProgressSummary> fetchSummary(String firebaseUid) async {
+    final uri = Uri.parse('$_base/progress/summary')
+        .replace(queryParameters: {'firebase_uid': firebaseUid});
+    final res = await http.get(uri);
+    if (res.statusCode != 200) throw Exception('Failed to load progress summary');
+    return ProgressSummary.fromJson(jsonDecode(res.body) as Map<String, dynamic>);
+  }
+
+  // GET /progress/vowel_stats?firebase_uid=X&type=short|long
+  static Future<List<VowelStats>> fetchVowelStats(
+      String firebaseUid, String type) async {
+    final uri = Uri.parse('$_base/progress/vowel_stats')
+        .replace(queryParameters: {'firebase_uid': firebaseUid, 'type': type});
+    final res = await http.get(uri);
+    if (res.statusCode != 200) throw Exception('Failed to load vowel stats');
+    final List data = jsonDecode(res.body) as List;
+    return data.map((e) => VowelStats.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
+  // GET /practice_sessions/recent?firebase_uid=X&limit=N
+  static Future<List<SessionRecord>> fetchRecentSessions(
+      String firebaseUid, {int limit = 5}) async {
+    final uri = Uri.parse('$_base/practice_sessions/recent').replace(
+        queryParameters: {
+          'firebase_uid': firebaseUid,
+          'limit': limit.toString()
+        });
+    final res = await http.get(uri);
+    if (res.statusCode != 200) throw Exception('Failed to load sessions');
+    final List data = jsonDecode(res.body) as List;
+    return data
+        .map((e) => SessionRecord.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  // GET /progress/trend?firebase_uid=X&type=short|long
+  static Future<List<DailyTrend>> fetchTrend(
+      String firebaseUid, String type) async {
+    final uri = Uri.parse('$_base/progress/trend')
+        .replace(queryParameters: {'firebase_uid': firebaseUid, 'type': type});
+    final res = await http.get(uri);
+    if (res.statusCode != 200) throw Exception('Failed to load trend');
+    final List data = jsonDecode(res.body) as List;
+    return data
+        .map((e) => DailyTrend.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 }

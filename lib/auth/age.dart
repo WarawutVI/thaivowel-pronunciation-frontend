@@ -165,7 +165,8 @@ class _AgepageState extends State<Agepage> {
                     margin: const EdgeInsets.symmetric(
                         horizontal: 16, vertical: 6),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFD0F0E4),
+                      color: const Color(0xFF2A9B6A).withValues(alpha: 0.15),
+                      // color: const Color(0xFFD0F0E4),
                       borderRadius: BorderRadius.circular(14),
                     ),
                   ),

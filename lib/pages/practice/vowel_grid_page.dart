@@ -218,6 +218,8 @@ class _VowelGridPageState extends State<VowelGridPage> {
                               child: Stack(
                                 children: [
                                   Container(
+                                    width: 150,
+                                    height: 150,
                                     decoration: BoxDecoration(
                                       color: _cardColor(v),
                                       borderRadius: BorderRadius.circular(16),

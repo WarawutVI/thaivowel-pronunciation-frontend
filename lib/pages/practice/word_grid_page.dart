@@ -205,12 +205,12 @@ class _WordGridPageState extends State<WordGridPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
                             widget.vowelSymbol,
                             style: const TextStyle(
-                              fontSize: 52,
+                              fontSize: 70,
                               fontWeight: FontWeight.bold,
                               color: Colors.black87,
                             ),

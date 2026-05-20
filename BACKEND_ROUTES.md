@@ -234,6 +234,197 @@ WHERE firebase_uid = ?;
 
 ---
 
+## 7. GET `/user_streaks`
+
+Returns the current and longest streak for the user (read version of route 5).
+
+**Query params:**
+| Param | Type | Example |
+|-------|------|---------|
+| `firebase_uid` | string | `abc123` |
+
+**Response:**
+```json
+{
+  "current_streak": 7,
+  "longest_streak": 14,
+  "last_practice_date": "2026-05-20"
+}
+```
+
+**SQL to use:**
+```sql
+SELECT current_streak, longest_streak, last_practice_date
+FROM user_streaks
+WHERE firebase_uid = ?;
+```
+
+> Return `{ current_streak: 0, longest_streak: 0, last_practice_date: null }` if the row doesn't exist yet.
+
+---
+
+## 8. GET `/progress/summary`
+
+Returns overall accuracy stats across all practice sessions for a user.
+
+**Query params:**
+| Param | Type | Example |
+|-------|------|---------|
+| `firebase_uid` | string | `abc123` |
+
+**Response:**
+```json
+{
+  "overall_accuracy": 0.76,
+  "total_sessions": 124,
+  "best_accuracy": 0.98,
+  "long_avg_accuracy": 0.71,
+  "short_avg_accuracy": 0.43
+}
+```
+
+> All accuracy values are `0.0–1.0` floats (not percentages). Return `0.0` for fields with no data.
+
+**SQL to use:**
+```sql
+SELECT
+  COALESCE(AVG(ps.confidence), 0.0)                                         AS overall_accuracy,
+  COUNT(ps.id)                                                               AS total_sessions,
+  COALESCE(MAX(ps.confidence), 0.0)                                         AS best_accuracy,
+  COALESCE(AVG(CASE WHEN v.vowel_type = 'long'  THEN ps.confidence END), 0.0) AS long_avg_accuracy,
+  COALESCE(AVG(CASE WHEN v.vowel_type = 'short' THEN ps.confidence END), 0.0) AS short_avg_accuracy
+FROM practice_sessions ps
+JOIN vowel_lessons vl ON vl.id = ps.lesson_id
+JOIN vowels v          ON v.id  = vl.vowel_id
+WHERE ps.firebase_uid = ?;
+```
+
+---
+
+## 9. GET `/progress/vowel_stats`
+
+Returns per-vowel practice count and average accuracy for a given vowel type.
+Used to power the **Practice Count** bar chart and **Vowels to work on** section.
+
+**Query params:**
+| Param | Type | Example |
+|-------|------|---------|
+| `firebase_uid` | string | `abc123` |
+| `type` | `'short'` \| `'long'` | `short` |
+
+**Response (array, one entry per vowel):**
+```json
+[
+  {
+    "vowel_id": 10,
+    "symbol": "-ะ",
+    "vowel_type": "short",
+    "practice_count": 7,
+    "avg_accuracy": 0.54
+  }
+]
+```
+
+**SQL to use:**
+```sql
+SELECT
+  v.id                                  AS vowel_id,
+  v.symbol,
+  v.vowel_type,
+  COUNT(ps.id)                          AS practice_count,
+  COALESCE(AVG(ps.confidence), 0.0)     AS avg_accuracy
+FROM vowels v
+LEFT JOIN vowel_lessons vl ON vl.vowel_id = v.id
+LEFT JOIN practice_sessions ps
+  ON ps.lesson_id = vl.id AND ps.firebase_uid = ?
+WHERE v.vowel_type = ?
+GROUP BY v.id
+ORDER BY v.id;
+```
+
+---
+
+## 10. GET `/practice_sessions/recent`
+
+Returns the N most recent practice sessions with vowel info.
+Used to power the **Recent Sessions** list.
+
+**Query params:**
+| Param | Type | Example |
+|-------|------|---------|
+| `firebase_uid` | string | `abc123` |
+| `limit` | integer | `5` |
+
+**Response (array):**
+```json
+[
+  {
+    "symbol": "-า",
+    "vowel_type": "long",
+    "confidence": 0.88,
+    "practiced_at": "2026-05-20T14:32:00"
+  }
+]
+```
+
+> `practiced_at` must be ISO 8601 format so Dart's `DateTime.parse()` can parse it.
+
+**SQL to use:**
+```sql
+SELECT
+  v.symbol,
+  v.vowel_type,
+  ps.confidence,
+  ps.practiced_at
+FROM practice_sessions ps
+JOIN vowel_lessons vl ON vl.id = ps.lesson_id
+JOIN vowels v          ON v.id  = vl.vowel_id
+WHERE ps.firebase_uid = ?
+ORDER BY ps.practiced_at DESC
+LIMIT ?;
+```
+
+---
+
+## 11. GET `/progress/trend`
+
+Returns daily average accuracy for the last 7 days.
+Used to power the **Accuracy Trend** line chart.
+
+**Query params:**
+| Param | Type | Example |
+|-------|------|---------|
+| `firebase_uid` | string | `abc123` |
+| `type` | `'short'` \| `'long'` | `short` |
+
+**Response (array, up to 7 entries — only days with at least one session):**
+```json
+[
+  { "date": "2026-05-14", "avg_accuracy": 0.65 },
+  { "date": "2026-05-15", "avg_accuracy": 0.71 },
+  { "date": "2026-05-20", "avg_accuracy": 0.80 }
+]
+```
+
+> Days with no sessions are omitted. The chart handles sparse data by plotting points at their index position.
+
+**SQL to use:**
+```sql
+SELECT
+  DATE(ps.practiced_at)         AS date,
+  AVG(ps.confidence)            AS avg_accuracy
+FROM practice_sessions ps
+JOIN vowel_lessons vl ON vl.id = ps.lesson_id
+JOIN vowels v          ON v.id  = vl.vowel_id
+WHERE ps.firebase_uid = ?
+  AND v.vowel_type    = ?
+  AND ps.practiced_at >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
+GROUP BY DATE(ps.practiced_at)
+ORDER BY date ASC;
+```
+
+---
+
 ## Also Required — Database Seed
 
 Run once before testing:

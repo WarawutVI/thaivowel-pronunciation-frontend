@@ -16,7 +16,7 @@ class _PracticepageState extends State<Practicepage> {
   Widget _buildCategoryCard({
     required String title,
     required String subtitle,
-    required String vowelSample,
+    required String imagePath,
     required Color color,
     required Color cardColor,
     required VoidCallback onTap,
@@ -49,20 +49,10 @@ class _PracticepageState extends State<Practicepage> {
                     subtitle,
                     style: TextStyle(fontSize: 13, color: Colors.grey[700]),
                   ),
-                  const SizedBox(height: 12),
-                  Text(
-                    vowelSample,
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: color,
-                      letterSpacing: 4,
-                    ),
-                  ),
                 ],
               ),
             ),
-            Icon(Icons.pets, size: 64, color: color.withValues(alpha: 0.5)),
+            Image.asset(imagePath, width: 80, height: 80),
           ],
         ),
       ),
@@ -125,7 +115,7 @@ class _PracticepageState extends State<Practicepage> {
           _buildCategoryCard(
             title: t('Short Vowel', 'สระเสียงสั้น'),
             subtitle: t('9 quick, snappy sounds', '9 เสียงสั้นกระชับ'),
-            vowelSample: '-ะ  -ิ  -ึ',
+            imagePath: 'assets/picture/shortvowel.png',
             color: const Color(0xFFE05C6A),
             cardColor: const Color(0xFFFFB3BA),
             onTap: () => Get.to(() => const VowelGridPage(type: 'short')),
@@ -133,7 +123,7 @@ class _PracticepageState extends State<Practicepage> {
           _buildCategoryCard(
             title: t('Long Vowel', 'สระเสียงยาว'),
             subtitle: t('9 stretched, resonant sounds', '9 เสียงยาวก้องกังวาน'),
-            vowelSample: '-า  -ี  -ื',
+            imagePath: 'assets/picture/longvowel.png',
             color: const Color(0xFF4A90D9),
             cardColor: const Color(0xFFB3D9FF),
             onTap: () => Get.to(() => const VowelGridPage(type: 'long')),
