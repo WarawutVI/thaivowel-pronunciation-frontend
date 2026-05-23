@@ -425,6 +425,89 @@ ORDER BY date ASC;
 
 ---
 
+## Also Required — Database Schema (CREATE TABLE)
+
+Run once to create all tables from scratch:
+
+```sql
+-- 1. Users
+CREATE TABLE users (
+  firebase_uid  VARCHAR(128) PRIMARY KEY,
+  email         VARCHAR(255) NOT NULL,
+  name          VARCHAR(255),
+  age           INT,
+  gender        VARCHAR(20),
+  created_at    DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 2. Vowels (one row per vowel sound, e.g. อา, อี, ...)
+CREATE TABLE vowels (
+  id              INT AUTO_INCREMENT PRIMARY KEY,
+  symbol          VARCHAR(20)  NOT NULL,
+  vowel_type      ENUM('short','long') NOT NULL,
+
+  -- Bilingual name & description for the Lessons page
+  name_en         VARCHAR(100),
+  name_th         VARCHAR(100),
+  description_en  TEXT,
+  description_th  TEXT,
+
+  -- Pronunciation guide (bilingual)
+  lips_en         VARCHAR(100),
+  lips_th         VARCHAR(100),
+  tongue_en       VARCHAR(100),
+  tongue_th       VARCHAR(100),
+  jaw_en          VARCHAR(100),
+  jaw_th          VARCHAR(100),
+  duration_en     VARCHAR(50),
+  duration_th     VARCHAR(50)
+);
+
+-- 3. Vowel lessons — individual words to practice (e.g. กา, ขา)
+CREATE TABLE vowel_lessons (
+  id           INT AUTO_INCREMENT PRIMARY KEY,
+  vowel_id     INT NOT NULL,
+  lesson_order INT NOT NULL,
+  lesson_name  VARCHAR(50) NOT NULL,
+  FOREIGN KEY (vowel_id) REFERENCES vowels(id)
+);
+
+-- 4. User lesson progress (one row per user+lesson, upserted)
+CREATE TABLE user_lesson_progress (
+  id                INT AUTO_INCREMENT PRIMARY KEY,
+  firebase_uid      VARCHAR(128) NOT NULL,
+  lesson_id         INT NOT NULL,
+  is_completed      TINYINT(1) DEFAULT 0,
+  best_accuracy     FLOAT DEFAULT 0.0,
+  attempts          INT DEFAULT 0,
+  last_practiced_at DATETIME,
+  UNIQUE KEY uq_user_lesson (firebase_uid, lesson_id),
+  FOREIGN KEY (lesson_id) REFERENCES vowel_lessons(id)
+);
+
+-- 5. Practice sessions (one row per recording attempt)
+CREATE TABLE practice_sessions (
+  id               INT AUTO_INCREMENT PRIMARY KEY,
+  firebase_uid     VARCHAR(128) NOT NULL,
+  lesson_id        INT NOT NULL,
+  confidence       FLOAT NOT NULL,
+  is_passed        TINYINT(1) NOT NULL,
+  duration_seconds INT DEFAULT 0,
+  practiced_at     DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (lesson_id) REFERENCES vowel_lessons(id)
+);
+
+-- 6. User streaks
+CREATE TABLE user_streaks (
+  firebase_uid       VARCHAR(128) PRIMARY KEY,
+  current_streak     INT DEFAULT 0,
+  longest_streak     INT DEFAULT 0,
+  last_practice_date DATE
+);
+```
+
+---
+
 ## Also Required — Database Seed
 
 Run once before testing:

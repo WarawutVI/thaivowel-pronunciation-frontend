@@ -85,12 +85,18 @@ class PredictResult {
 class UserStreak {
   final int currentStreak;
   final int longestStreak;
+  final String? lastPracticeDate;
 
-  const UserStreak({required this.currentStreak, required this.longestStreak});
+  const UserStreak({
+    required this.currentStreak,
+    required this.longestStreak,
+    this.lastPracticeDate,
+  });
 
   factory UserStreak.fromJson(Map<String, dynamic> j) => UserStreak(
         currentStreak: (j['current_streak'] ?? 0) as int,
         longestStreak: (j['longest_streak'] ?? 0) as int,
+        lastPracticeDate: j['last_practice_date'] as String?,
       );
 }
 
@@ -145,12 +151,14 @@ class VowelStats {
 class SessionRecord {
   final String symbol;
   final String vowelType;
+  final String lessonName;
   final double confidence;
   final DateTime practicedAt;
 
   const SessionRecord({
     required this.symbol,
     required this.vowelType,
+    required this.lessonName,
     required this.confidence,
     required this.practicedAt,
   });
@@ -158,6 +166,7 @@ class SessionRecord {
   factory SessionRecord.fromJson(Map<String, dynamic> j) => SessionRecord(
         symbol: j['symbol'] as String,
         vowelType: j['vowel_type'] as String,
+        lessonName: j['lesson_name'] as String,
         confidence: (j['confidence'] ?? 0.0).toDouble(),
         practicedAt: DateTime.parse(j['practiced_at'] as String),
       );
@@ -176,6 +185,30 @@ class DailyTrend {
 }
 
 class PracticeApi {
+  // POST /users — call once after sign-up
+  static Future<void> createUser({
+    required String firebaseUid,
+    required String username,
+    required String email,
+    required String gender,
+    required int age,
+    required String loginProvider,
+  }) async {
+    final res = await http.post(
+      Uri.parse('$_base/users'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'firebase_uid': firebaseUid,
+        'username': username,
+        'email': email,
+        'gender': gender,
+        'age': age,
+        'login_provider': loginProvider,
+      }),
+    );
+    if (res.statusCode != 200) throw Exception('Failed to create user');
+  }
+
   // GET /vowels?type=short|long&firebase_uid=X
   static Future<List<VowelProgress>> fetchVowels(
       String firebaseUid, String type) async {
@@ -305,11 +338,22 @@ class PracticeApi {
         .toList();
   }
 
-  // GET /progress/trend?firebase_uid=X&type=short|long
+  // GET /progress/trend?firebase_uid=X&type=short|long&period=week|month|year&start=YYYY-MM-DD&end=YYYY-MM-DD
   static Future<List<DailyTrend>> fetchTrend(
-      String firebaseUid, String type) async {
-    final uri = Uri.parse('$_base/progress/trend')
-        .replace(queryParameters: {'firebase_uid': firebaseUid, 'type': type});
+    String firebaseUid,
+    String type, {
+    String period = 'week',
+    String? start,
+    String? end,
+  }) async {
+    final params = <String, String>{
+      'firebase_uid': firebaseUid,
+      'type': type,
+      'period': period,
+    };
+    if (start != null) params['start'] = start;
+    if (end != null) params['end'] = end;
+    final uri = Uri.parse('$_base/progress/trend').replace(queryParameters: params);
     final res = await http.get(uri);
     if (res.statusCode != 200) throw Exception('Failed to load trend');
     final List data = jsonDecode(res.body) as List;

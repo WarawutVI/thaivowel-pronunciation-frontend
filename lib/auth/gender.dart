@@ -49,9 +49,9 @@ class _GenderPageState extends State<GenderPage> {
     final isSelected = selectedGender == gender;
     final color =
         isSelected ? const Color(0xFF1A7A50) : const Color(0xFFCCCCCC);
-    const double circleSize = 58;
-    const double bodyWidth = 66;
-    const double bodyHeight = 80;
+    const double circleSize = 85;
+    const double bodyWidth = 120;
+    const double bodyHeight = 212;
 
     Widget body;
     if (gender == 'male') {
@@ -167,11 +167,8 @@ class _GenderPageState extends State<GenderPage> {
                   children: [
                     Expanded(child: _buildGenderIcon('male')),
                     Container(
-                        width: 1, height: 200, color: Colors.grey[200]),
+                        width: 2, height: 400, color: Colors.grey[200]),
                     Expanded(child: _buildGenderIcon('female')),
-                    Container(
-                        width: 1, height: 200, color: Colors.grey[200]),
-                    Expanded(child: _buildGenderIcon('other')),
                   ],
                 ),
               ),

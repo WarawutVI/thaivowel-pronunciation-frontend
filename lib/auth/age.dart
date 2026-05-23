@@ -143,7 +143,7 @@ class _AgepageState extends State<Agepage> {
               Text(
                 t('How old are you?', 'คุณอายุเท่าไหร่?'),
                 style: const TextStyle(
-                  fontSize: 28,
+                  fontSize: 30,
                   fontWeight: FontWeight.bold,
                   color: Colors.black87,
                 ),
@@ -163,10 +163,9 @@ class _AgepageState extends State<Agepage> {
                       setState(() => selectedAge = ages[index]),
                   selectionOverlay: Container(
                     margin: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 6),
+                        horizontal: 16, vertical: 1),
                     decoration: BoxDecoration(
                       color: const Color(0xFF2A9B6A).withValues(alpha: 0.15),
-                      // color: const Color(0xFFD0F0E4),
                       borderRadius: BorderRadius.circular(14),
                     ),
                   ),
