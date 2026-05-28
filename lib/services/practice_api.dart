@@ -1,9 +1,18 @@
 import 'dart:convert';
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 
-const String _base = 'https://inflation-bluetooth-searching-ethnic.trycloudflare.com';
-const String _flaskBase = 'https://cabinets-sagem-server-something.trycloudflare.com';
+const String _base = 'https://perkiness-shadiness-extras.ngrok-free.dev';
+const String _flaskBase = 'https://perkiness-shadiness-extras.ngrok-free.dev/model';
+
+const Map<String, String> _headers = {
+  'ngrok-skip-browser-warning': 'true',
+};
+
+const Map<String, String> _jsonHeaders = {
+  'Content-Type': 'application/json',
+  'ngrok-skip-browser-warning': 'true',
+};
 
 class VowelDetail {
   final int id;
@@ -77,12 +86,11 @@ class VowelProgress {
       );
 }
 
-
 class LessonProgress {
   final int lessonId;
   final int lessonOrder;
   final String lessonName;
-  final bool? isCompleted; // null = not attempted
+  final bool? isCompleted;
   final double bestAccuracy;
   final int attempts;
 
@@ -245,7 +253,7 @@ class DailyTrend {
 }
 
 class PracticeApi {
-  // POST /users — call once after sign-up
+  // POST /users
   static Future<void> createUser({
     required String firebaseUid,
     required String username,
@@ -256,7 +264,7 @@ class PracticeApi {
   }) async {
     final res = await http.post(
       Uri.parse('$_base/users'),
-      headers: {'Content-Type': 'application/json'},
+      headers: _jsonHeaders,
       body: jsonEncode({
         'firebase_uid': firebaseUid,
         'username': username,
@@ -266,7 +274,10 @@ class PracticeApi {
         'login_provider': loginProvider,
       }),
     );
-    if (res.statusCode != 200) throw Exception('Failed to create user');
+    // 201 = created, 409 = already exists (both OK)
+    if (res.statusCode != 201 && res.statusCode != 409) {
+      throw Exception('Failed to create user: ${res.statusCode}');
+    }
   }
 
   // GET /vowels?type=short|long&firebase_uid=X
@@ -274,7 +285,7 @@ class PracticeApi {
       String firebaseUid, String type) async {
     final uri = Uri.parse('$_base/vowels')
         .replace(queryParameters: {'type': type, 'firebase_uid': firebaseUid});
-    final res = await http.get(uri);
+    final res = await http.get(uri, headers: _headers);
     if (res.statusCode != 200) throw Exception('Failed to load vowels');
     final List data = jsonDecode(res.body) as List;
     return data.map((e) => VowelProgress.fromJson(e as Map<String, dynamic>)).toList();
@@ -287,17 +298,22 @@ class PracticeApi {
       'vowel_id': vowelId.toString(),
       'firebase_uid': firebaseUid,
     });
-    final res = await http.get(uri);
+    final res = await http.get(uri, headers: _headers);
     if (res.statusCode != 200) throw Exception('Failed to load lessons');
     final List data = jsonDecode(res.body) as List;
     return data.map((e) => LessonProgress.fromJson(e as Map<String, dynamic>)).toList();
   }
 
-  // POST Flask /predict2 — file: WAV audio, index: vowel index 0–17
-  static Future<PredictResult> predict(File audioFile, int vowelIndex) async {
+  // POST Flask /predict2
+  static Future<PredictResult> predict(Uint8List audioBytes, int vowelIndex) async {
     final req = http.MultipartRequest('POST', Uri.parse('$_flaskBase/predict2'));
+    req.headers.addAll(_headers);
     req.fields['index'] = vowelIndex.toString();
-    req.files.add(await http.MultipartFile.fromPath('file', audioFile.path));
+    req.files.add(http.MultipartFile.fromBytes(
+      'file',
+      audioBytes,
+      filename: 'recording.wav',
+    ));
     final streamed = await req.send();
     final res = await http.Response.fromStream(streamed);
     if (res.statusCode != 200) throw Exception('Prediction failed: ${res.statusCode}');
@@ -314,7 +330,7 @@ class PracticeApi {
   }) async {
     await http.post(
       Uri.parse('$_base/practice_sessions'),
-      headers: {'Content-Type': 'application/json'},
+      headers: _jsonHeaders,
       body: jsonEncode({
         'firebase_uid': firebaseUid,
         'lesson_id': lessonId,
@@ -334,7 +350,7 @@ class PracticeApi {
   }) async {
     await http.post(
       Uri.parse('$_base/user_lesson_progress'),
-      headers: {'Content-Type': 'application/json'},
+      headers: _jsonHeaders,
       body: jsonEncode({
         'firebase_uid': firebaseUid,
         'lesson_id': lessonId,
@@ -348,7 +364,7 @@ class PracticeApi {
   static Future<void> updateStreak(String firebaseUid) async {
     await http.put(
       Uri.parse('$_base/user_streaks'),
-      headers: {'Content-Type': 'application/json'},
+      headers: _jsonHeaders,
       body: jsonEncode({'firebase_uid': firebaseUid}),
     );
   }
@@ -357,7 +373,7 @@ class PracticeApi {
   static Future<UserStreak> fetchStreak(String firebaseUid) async {
     final uri = Uri.parse('$_base/user_streaks')
         .replace(queryParameters: {'firebase_uid': firebaseUid});
-    final res = await http.get(uri);
+    final res = await http.get(uri, headers: _headers);
     if (res.statusCode != 200) throw Exception('Failed to load streak');
     return UserStreak.fromJson(jsonDecode(res.body) as Map<String, dynamic>);
   }
@@ -366,7 +382,7 @@ class PracticeApi {
   static Future<ProgressSummary> fetchSummary(String firebaseUid) async {
     final uri = Uri.parse('$_base/progress/summary')
         .replace(queryParameters: {'firebase_uid': firebaseUid});
-    final res = await http.get(uri);
+    final res = await http.get(uri, headers: _headers);
     if (res.statusCode != 200) throw Exception('Failed to load progress summary');
     return ProgressSummary.fromJson(jsonDecode(res.body) as Map<String, dynamic>);
   }
@@ -376,7 +392,7 @@ class PracticeApi {
       String firebaseUid, String type) async {
     final uri = Uri.parse('$_base/progress/vowel_stats')
         .replace(queryParameters: {'firebase_uid': firebaseUid, 'type': type});
-    final res = await http.get(uri);
+    final res = await http.get(uri, headers: _headers);
     if (res.statusCode != 200) throw Exception('Failed to load vowel stats');
     final List data = jsonDecode(res.body) as List;
     return data.map((e) => VowelStats.fromJson(e as Map<String, dynamic>)).toList();
@@ -390,30 +406,34 @@ class PracticeApi {
           'firebase_uid': firebaseUid,
           'limit': limit.toString()
         });
-    final res = await http.get(uri);
+    final res = await http.get(uri, headers: _headers);
     if (res.statusCode != 200) throw Exception('Failed to load sessions');
     final List data = jsonDecode(res.body) as List;
-    return data
-        .map((e) => SessionRecord.fromJson(e as Map<String, dynamic>))
-        .toList();
+    return data.map((e) => SessionRecord.fromJson(e as Map<String, dynamic>)).toList();
   }
 
   // GET /vowels/:vowelId/formants
   static Future<VowelFormant> fetchVowelFormant(int vowelId) async {
-    final res = await http.get(Uri.parse('$_base/vowels/$vowelId/formants'));
+    final res = await http.get(
+      Uri.parse('$_base/vowels/$vowelId/formants'),
+      headers: _headers,
+    );
     if (res.statusCode != 200) throw Exception('Failed to load vowel formant');
     return VowelFormant.fromJson(jsonDecode(res.body) as Map<String, dynamic>);
   }
 
-  // GET /vowels/details — all 18 vowels with pronunciation guide data
+  // GET /vowels/details
   static Future<List<VowelDetail>> fetchVowelDetails() async {
-    final res = await http.get(Uri.parse('$_base/vowels/details'));
+    final res = await http.get(
+      Uri.parse('$_base/vowels/details'),
+      headers: _headers,
+    );
     if (res.statusCode != 200) throw Exception('Failed to load vowel details');
     final List data = jsonDecode(res.body) as List;
     return data.map((e) => VowelDetail.fromJson(e as Map<String, dynamic>)).toList();
   }
 
-  // GET /progress/trend?firebase_uid=X&type=short|long&period=week|month|year&start=YYYY-MM-DD&end=YYYY-MM-DD
+  // GET /progress/trend
   static Future<List<DailyTrend>> fetchTrend(
     String firebaseUid,
     String type, {
@@ -429,11 +449,9 @@ class PracticeApi {
     if (start != null) params['start'] = start;
     if (end != null) params['end'] = end;
     final uri = Uri.parse('$_base/progress/trend').replace(queryParameters: params);
-    final res = await http.get(uri);
+    final res = await http.get(uri, headers: _headers);
     if (res.statusCode != 200) throw Exception('Failed to load trend');
     final List data = jsonDecode(res.body) as List;
-    return data
-        .map((e) => DailyTrend.fromJson(e as Map<String, dynamic>))
-        .toList();
+    return data.map((e) => DailyTrend.fromJson(e as Map<String, dynamic>)).toList();
   }
 }
