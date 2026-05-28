@@ -20,6 +20,9 @@ dependencies:
   record: ^6.2.0
   fl_chart: ^0.69.0
   path_provider: ^2.1.5
+  webview_flutter: ^4.10.0
+  url_launcher: ^6.3.1
+  youtube_player_flutter: ^9.1.3
 
 dev_dependencies:
   flutter_test:
@@ -30,4 +33,22 @@ flutter:
   assets:
     - assets/picture/
     - assets/references/
+    - assets/references/1/
+    - assets/references/2/
+    - assets/references/3/
+    - assets/references/4/
+    - assets/references/5/
+    - assets/references/6/
+    - assets/references/7/
+    - assets/references/8/
+    - assets/references/9/
+    - assets/references/10/
+    - assets/references/11/
+    - assets/references/12/
+    - assets/references/13/
+    - assets/references/14/
+    - assets/references/15/
+    - assets/references/16/
+    - assets/references/17/
+    - assets/references/18/
 

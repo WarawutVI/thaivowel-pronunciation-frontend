@@ -3,7 +3,55 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 
 const String _base = 'http://10.0.2.2:4000';
-const String _flaskBase = 'http://192.168.0.62:5000';
+const String _flaskBase = 'http://192.168.0.11:5000';
+
+class VowelDetail {
+  final int id;
+  final String symbol;
+  final String vowelType;
+  final String? unicodePhonetic;
+  final String? descriptionEn;
+  final String? descriptionTh;
+  final String? lipsEn;
+  final String? lipsTh;
+  final String? tongueEn;
+  final String? tongueTh;
+  final String? jawEn;
+  final String? jawTh;
+  final String? linkVideo;
+
+  const VowelDetail({
+    required this.id,
+    required this.symbol,
+    required this.vowelType,
+    this.unicodePhonetic,
+    this.descriptionEn,
+    this.descriptionTh,
+    this.lipsEn,
+    this.lipsTh,
+    this.tongueEn,
+    this.tongueTh,
+    this.jawEn,
+    this.jawTh,
+    this.linkVideo,
+  });
+
+  factory VowelDetail.fromJson(Map<String, dynamic> j) => VowelDetail(
+        id: j['id'] as int,
+        symbol: j['symbol'] as String,
+        vowelType: j['vowel_type'] as String,
+        unicodePhonetic: j['unicode_phonetic'] as String?,
+        descriptionEn: j['description_en'] as String?,
+        descriptionTh: j['description_th'] as String?,
+        lipsEn: j['lips_en'] as String?,
+        lipsTh: j['lips_th'] as String?,
+        tongueEn: j['tongue_en'] as String?,
+        tongueTh: j['tongue_th'] as String?,
+        jawEn: j['jaw_en'] as String?,
+        jawTh: j['jaw_th'] as String?,
+        linkVideo: j['link_video'] as String?,
+      );
+}
 
 class VowelProgress {
   final int vowelId;
@@ -54,6 +102,18 @@ class LessonProgress {
         isCompleted: j['is_completed'] == null ? null : (j['is_completed'] as int) == 1,
         bestAccuracy: (j['best_accuracy'] ?? 0.0).toDouble(),
         attempts: (j['attempts'] ?? 0) as int,
+      );
+}
+
+class VowelFormant {
+  final double f1;
+  final double f2;
+
+  const VowelFormant({required this.f1, required this.f2});
+
+  factory VowelFormant.fromJson(Map<String, dynamic> j) => VowelFormant(
+        f1: (j['f1'] as num).toDouble(),
+        f2: (j['f2'] as num).toDouble(),
       );
 }
 
@@ -336,6 +396,21 @@ class PracticeApi {
     return data
         .map((e) => SessionRecord.fromJson(e as Map<String, dynamic>))
         .toList();
+  }
+
+  // GET /vowels/:vowelId/formants
+  static Future<VowelFormant> fetchVowelFormant(int vowelId) async {
+    final res = await http.get(Uri.parse('$_base/vowels/$vowelId/formants'));
+    if (res.statusCode != 200) throw Exception('Failed to load vowel formant');
+    return VowelFormant.fromJson(jsonDecode(res.body) as Map<String, dynamic>);
+  }
+
+  // GET /vowels/details — all 18 vowels with pronunciation guide data
+  static Future<List<VowelDetail>> fetchVowelDetails() async {
+    final res = await http.get(Uri.parse('$_base/vowels/details'));
+    if (res.statusCode != 200) throw Exception('Failed to load vowel details');
+    final List data = jsonDecode(res.body) as List;
+    return data.map((e) => VowelDetail.fromJson(e as Map<String, dynamic>)).toList();
   }
 
   // GET /progress/trend?firebase_uid=X&type=short|long&period=week|month|year&start=YYYY-MM-DD&end=YYYY-MM-DD
