@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:frontend/services/practice_api.dart';
@@ -8,6 +9,7 @@ import 'package:frontend/services/vowel_utils.dart';
 import 'package:frontend/widgets/language_toggle_button.dart';
 import 'package:frontend/widgets/waveform_display.dart';
 import 'package:get/get.dart';
+import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 
@@ -85,9 +87,16 @@ class _RecordingPageState extends State<RecordingPage> {
     }
   }
 
-  Future<List<double>> _loadUserWaveform(String filePath) async {
+  Future<Uint8List> _getAudioBytes(String path) async {
+    if (kIsWeb) {
+      final res = await http.get(Uri.parse(path));
+      return res.bodyBytes;
+    }
+    return File(path).readAsBytes();
+  }
+
+  Future<List<double>> _loadUserWaveform(Uint8List bytes) async {
     try {
-      final bytes = await File(filePath).readAsBytes();
       return preprocessSamples(decodePcmWav(bytes));
     } catch (e) {
       debugPrint('User waveform load error: $e');
@@ -107,8 +116,13 @@ class _RecordingPageState extends State<RecordingPage> {
       return;
     }
 
-    final dir = await getApplicationDocumentsDirectory();
-    final path = '${dir.path}/vowel_${widget.vowelId}.wav';
+    final String path;
+    if (kIsWeb) {
+      path = 'vowel_recording.wav';
+    } else {
+      final dir = await getApplicationDocumentsDirectory();
+      path = '${dir.path}/vowel_${widget.vowelId}.wav';
+    }
 
     await _recorder.start(
       const RecordConfig(
@@ -153,12 +167,13 @@ class _RecordingPageState extends State<RecordingPage> {
     final recordStart = DateTime.now()
         .subtract(Duration(seconds: _recordSeconds));
     try {
-      final result = await PracticeApi.predict(File(filePath), _vowelIndex);
+      final audioBytes = await _getAudioBytes(filePath);
+      final result = await PracticeApi.predict(audioBytes, _vowelIndex);
       final duration = DateTime.now().difference(recordStart).inSeconds;
 
       final waves = await Future.wait([
         _loadRefWaveform(),
-        _loadUserWaveform(filePath),
+        _loadUserWaveform(audioBytes),
       ]);
 
       VowelFormant? refFormant;

@@ -81,7 +81,7 @@ class _AgepageState extends State<Agepage> {
   Future<void> postdata(String uid, String name, String email, String? gender, int? age, String loginProvider) async {
     try {
       var response = await http.post(
-        Uri.parse('http://10.0.2.2:4000/users'),
+        Uri.parse('https://perkiness-shadiness-extras.ngrok-free.dev/users'),
         headers: <String, String>{
           'Content-Type': 'application/json',
         },
