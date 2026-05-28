@@ -79,27 +79,23 @@ class _AgepageState extends State<Agepage> {
   }
 
   Future<void> postdata(String uid, String name, String email, String? gender, int? age, String loginProvider) async {
-    try {
-      var response = await http.post(
-        Uri.parse('http://10.0.2.2:4000/users'),
-        headers: <String, String>{
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({
-          'firebase_uid': uid,
-          'username': name,
-          'email': email,
-          'gender': gender,
-          'age': age,
-          'login_provider': loginProvider,
-        }),
-      );
-      print(response.statusCode);
-      if (response.statusCode == 200) {
-        print("complete sign up");
-      }
-    } catch (e) {
-      print('Error: $e');
+    final response = await http.post(
+      Uri.parse('https://perkiness-shadiness-extras.ngrok-free.dev/users'),
+      headers: <String, String>{
+        'Content-Type': 'application/json',
+        'ngrok-skip-browser-warning': 'true',
+      },
+      body: jsonEncode({
+        'firebase_uid': uid,
+        'username': name,
+        'email': email,
+        'gender': gender ?? 'other',
+        'age': age,
+        'login_provider': loginProvider,
+      }),
+    );
+    if (response.statusCode != 201) {
+      throw Exception('Failed to create user: ${response.statusCode} ${response.body}');
     }
   }
 
