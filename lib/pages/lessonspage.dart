@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/widgets/language_toggle_button.dart';
 import 'package:frontend/pages/lessons/vowel_detail_page.dart';
+import 'package:frontend/services/language_controller.dart';
 import 'package:frontend/services/practice_api.dart';
 import 'package:get/get.dart';
 
@@ -22,6 +22,7 @@ class _LessonspageState extends State<Lessonspage> {
   @override
   void initState() {
     super.initState();
+    isEnglish = Get.find<LanguageController>().isEnglish;
     _load();
   }
 
@@ -58,12 +59,6 @@ class _LessonspageState extends State<Lessonspage> {
           ),
         ),
         centerTitle: false,
-        actions: [
-          LanguageToggleButton(
-            isEnglish: isEnglish,
-            onChanged: (v) => setState(() => isEnglish = v),
-          ),
-        ],
       ),
       body: loading
           ? const Center(child: CircularProgressIndicator(color: Color(0xFF1A7A50)))

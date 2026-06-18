@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:frontend/widgets/language_toggle_button.dart';
 import 'package:frontend/pages/progressELM/avg_accuracy_donuts.dart';
+import 'package:frontend/services/language_controller.dart';
 import 'package:frontend/pages/progressELM/practice_count_chart.dart';
 import 'package:frontend/pages/progressELM/recent_sessions_list.dart';
 import 'package:frontend/pages/progressELM/summary_card.dart';
@@ -47,6 +47,7 @@ class _ProgreespageState extends State<Progreespage> {
   @override
   void initState() {
     super.initState();
+    isEnglish = Get.find<LanguageController>().isEnglish;
     _load();
   }
 
@@ -124,12 +125,6 @@ class _ProgreespageState extends State<Progreespage> {
           style: const TextStyle(
               color: Colors.black87, fontWeight: FontWeight.bold),
         ),
-        actions: [
-          LanguageToggleButton(
-            isEnglish: isEnglish,
-            onChanged: (v) => setState(() => isEnglish = v),
-          ),
-        ],
       );
 
   // ── Scrollable body with all section widgets ──────────────────────────────────
