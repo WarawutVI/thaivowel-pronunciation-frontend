@@ -88,9 +88,9 @@ class _VowelDetailPageState extends State<VowelDetailPage> {
           backgroundColor: const Color(0xFFF4FAF7),
           appBar: AppBar(
             backgroundColor: Colors.white,
-            elevation: 0,
+            elevation: 1,
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios, color: Colors.black87),
+              icon: const Icon(Icons.arrow_back, color: Colors.black87),
               onPressed: () => Get.back(),
             ),
             title: Text(
@@ -98,10 +98,8 @@ class _VowelDetailPageState extends State<VowelDetailPage> {
               style: const TextStyle(
                 color: Colors.black87,
                 fontWeight: FontWeight.bold,
-                fontSize: 18,
               ),
             ),
-            centerTitle: false,
           ),
           body: ListView(
             padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),

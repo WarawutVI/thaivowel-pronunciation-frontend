@@ -45,9 +45,9 @@ class _LessonspageState extends State<Lessonspage> {
       backgroundColor: const Color(0xFFF4FAF7),
       appBar: AppBar(
         backgroundColor: Colors.white,
-        elevation: 0,
+        elevation: 1,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.black87),
+          icon: const Icon(Icons.arrow_back, color: Colors.black87),
           onPressed: () => Get.back(),
         ),
         title: Text(
@@ -55,10 +55,8 @@ class _LessonspageState extends State<Lessonspage> {
           style: const TextStyle(
             color: Colors.black87,
             fontWeight: FontWeight.bold,
-            fontSize: 18,
           ),
         ),
-        centerTitle: false,
       ),
       body: loading
           ? const Center(child: CircularProgressIndicator(color: Color(0xFF1A7A50)))
