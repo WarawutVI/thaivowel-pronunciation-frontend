@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:frontend/services/language_controller.dart';
 import 'package:frontend/widgets/language_toggle_button.dart';
 import 'package:frontend/wrapper.dart';
 import 'package:get/get.dart';
@@ -38,7 +39,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
   @override
   void initState() {
     super.initState();
-    isEnglish = widget.isEnglish;
+    isEnglish = Get.find<LanguageController>().isEnglish;
     _scrollController =
         FixedExtentScrollController(initialItem: ages.indexOf(selectedAge));
   }

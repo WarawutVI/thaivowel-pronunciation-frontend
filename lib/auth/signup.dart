@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:frontend/services/language_controller.dart';
 import 'package:frontend/widgets/language_toggle_button.dart';
 import 'package:frontend/auth/gender.dart';
 import 'package:frontend/auth/login.dart';
@@ -24,6 +25,12 @@ class _SignupState extends State<Signup> {
   bool isEnglish = true;
   bool _passwordVisible = false;
   bool _confirmPasswordVisible = false;
+
+  @override
+  void initState() {
+    super.initState();
+    isEnglish = Get.find<LanguageController>().isEnglish;
+  }
 
   String t(String en, String th) => isEnglish ? en : th;
 
