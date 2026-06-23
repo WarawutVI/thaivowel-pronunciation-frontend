@@ -26,6 +26,7 @@ class _HomepageState extends State<Homepage> {
   @override
   void initState() {
     super.initState();
+    isEnglish = Get.find<LanguageController>().isEnglish;
     _loadStreak();
   }
 

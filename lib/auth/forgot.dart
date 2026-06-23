@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:frontend/services/language_controller.dart';
 import 'package:frontend/widgets/language_toggle_button.dart';
 import 'package:get/get.dart';
 
@@ -13,6 +14,12 @@ class Forgot extends StatefulWidget {
 class _ForgotState extends State<Forgot> {
   final TextEditingController email = TextEditingController();
   bool isEnglish = true;
+
+  @override
+  void initState() {
+    super.initState();
+    isEnglish = Get.find<LanguageController>().isEnglish;
+  }
 
   String t(String en, String th) => isEnglish ? en : th;
 

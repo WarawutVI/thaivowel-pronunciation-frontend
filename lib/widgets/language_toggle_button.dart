@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/services/language_controller.dart';
+import 'package:get/get.dart';
 
 class LanguageToggleButton extends StatelessWidget {
   final bool isEnglish;
@@ -51,7 +53,10 @@ class LanguageToggleButton extends StatelessWidget {
   Widget build(BuildContext context) {
     if (pillStyle) {
       return PopupMenuButton<bool>(
-        onSelected: onChanged,
+        onSelected: (v) {
+          Get.find<LanguageController>().setLanguage(v);
+          onChanged(v);
+        },
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         itemBuilder: (_) => _items(),
         child: Container(
