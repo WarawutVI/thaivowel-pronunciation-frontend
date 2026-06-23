@@ -10,10 +10,6 @@ void main() async {
    WidgetsFlutterBinding.ensureInitialized();
     await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
   );
   Get.put(LanguageController());
   runApp(const MyApp());

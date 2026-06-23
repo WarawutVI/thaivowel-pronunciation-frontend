@@ -1,12 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-<<<<<<< Updated upstream
 import 'package:frontend/auth/nationality.dart';
-=======
-import 'package:frontend/services/language_controller.dart';
->>>>>>> Stashed changes
 import 'package:frontend/widgets/language_toggle_button.dart';
 import 'package:get/get.dart';
+import 'package:frontend/services/language_controller.dart';
 
 class Agepage extends StatefulWidget {
   final String uid;

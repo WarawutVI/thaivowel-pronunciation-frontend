@@ -1,9 +1,4 @@
 import 'package:flutter/material.dart';
-<<<<<<< Updated upstream
-=======
-import 'package:frontend/services/language_controller.dart';
-import 'package:frontend/widgets/language_toggle_button.dart';
->>>>>>> Stashed changes
 import 'package:frontend/pages/practice/vowel_grid_page.dart';
 import 'package:frontend/services/language_controller.dart';
 import 'package:get/get.dart';
@@ -27,10 +22,7 @@ class _PracticepageState extends State<Practicepage> {
   String t(String en, String th) => isEnglish ? en : th;
 
   @override
-  void initState() {
-    super.initState();
-    isEnglish = Get.find<LanguageController>().isEnglish;
-  }
+ 
 
   Widget _buildCategoryCard({
     required String title,

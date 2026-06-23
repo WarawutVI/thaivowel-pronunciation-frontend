@@ -308,7 +308,7 @@ class PracticeApi {
 
   // POST Flask /predict2
   static Future<PredictResult> predict(Uint8List audioBytes, int vowelIndex) async {
-    final req = http.MultipartRequest('POST', Uri.parse('$_flaskBase/predict2'));
+    final req = http.MultipartRequest('POST', Uri.parse('$_flaskBase/predict3'));
     req.headers.addAll(_headers);
     req.fields['index'] = vowelIndex.toString();
     req.files.add(http.MultipartFile.fromBytes(

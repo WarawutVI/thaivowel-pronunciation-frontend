@@ -1,10 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-<<<<<<< Updated upstream
-=======
-import 'package:frontend/services/language_controller.dart';
-import 'package:frontend/widgets/language_toggle_button.dart';
->>>>>>> Stashed changes
 import 'package:frontend/pages/homepage.dart';
 import 'package:frontend/services/language_controller.dart';
 import 'package:frontend/pages/practice/recording_page.dart';
