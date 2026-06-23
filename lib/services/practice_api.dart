@@ -260,6 +260,7 @@ class PracticeApi {
     required String email,
     required String gender,
     required int age,
+    required String nationality,
     required String loginProvider,
   }) async {
     final res = await http.post(
@@ -271,6 +272,7 @@ class PracticeApi {
         'email': email,
         'gender': gender,
         'age': age,
+        'nationality': nationality,
         'login_provider': loginProvider,
       }),
     );

@@ -1,10 +1,8 @@
-import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:frontend/auth/nationality.dart';
 import 'package:frontend/widgets/language_toggle_button.dart';
-import 'package:frontend/wrapper.dart';
 import 'package:get/get.dart';
-import 'package:http/http.dart' as http;
 
 class Agepage extends StatefulWidget {
   final String uid;
@@ -60,47 +58,15 @@ class _AgepageState extends State<Agepage> {
     );
   }
 
-  Future<void> _createAccount() async {
-    try {
-      Get.dialog(
-        const Center(child: CircularProgressIndicator()),
-        barrierDismissible: false,
-      );
-
-      await postdata(widget.uid, widget.username, widget.email, widget.gender, selectedAge, widget.loginProvider);
-
-      Get.back();
-      Get.offAll(() => const Wrapper());
-    } catch (e) {
-      Get.back();
-      Get.snackbar(t("Error", "เกิดข้อผิดพลาด"), e.toString(),
-          backgroundColor: Colors.red, colorText: Colors.white);
-    }
-  }
-
-  Future<void> postdata(String uid, String name, String email, String? gender, int? age, String loginProvider) async {
-    try {
-      var response = await http.post(
-        Uri.parse('https://perkiness-shadiness-extras.ngrok-free.dev/users'),
-        headers: <String, String>{
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({
-          'firebase_uid': uid,
-          'username': name,
-          'email': email,
-          'gender': gender,
-          'age': age,
-          'login_provider': loginProvider,
-        }),
-      );
-      print(response.statusCode);
-      if (response.statusCode == 200) {
-        print("complete sign up");
-      }
-    } catch (e) {
-      print('Error: $e');
-    }
+  void _proceed() {
+    Get.to(() => NationalityPage(
+          uid: widget.uid,
+          username: widget.username,
+          email: widget.email,
+          gender: widget.gender,
+          age: selectedAge,
+          loginProvider: widget.loginProvider,
+        ));
   }
 
   @override
@@ -213,14 +179,14 @@ class _AgepageState extends State<Agepage> {
                 width: double.infinity,
                 height: 54,
                 child: ElevatedButton(
-                  onPressed: _createAccount,
+                  onPressed: _proceed,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF1A7A50),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30)),
                   ),
                   child: Text(
-                    t("Let's go!", "ไปเลย!"),
+                    t('Continue', 'ดำเนินการต่อ'),
                     style: const TextStyle(
                         color: Colors.white,
                         fontSize: 16,
