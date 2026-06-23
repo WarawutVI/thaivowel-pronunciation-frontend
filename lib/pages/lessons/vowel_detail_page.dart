@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/widgets/language_toggle_button.dart';
 import 'package:frontend/pages/practice/word_grid_page.dart';
+import 'package:frontend/services/language_controller.dart';
 import 'package:frontend/services/practice_api.dart';
 import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -29,7 +29,7 @@ class _VowelDetailPageState extends State<VowelDetailPage> {
   @override
   void initState() {
     super.initState();
-    isEnglish = widget.isEnglish;
+    isEnglish = Get.find<LanguageController>().isEnglish;
     _initVideo();
   }
 
@@ -88,9 +88,9 @@ class _VowelDetailPageState extends State<VowelDetailPage> {
           backgroundColor: const Color(0xFFF4FAF7),
           appBar: AppBar(
             backgroundColor: Colors.white,
-            elevation: 0,
+            elevation: 1,
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios, color: Colors.black87),
+              icon: const Icon(Icons.arrow_back, color: Colors.black87),
               onPressed: () => Get.back(),
             ),
             title: Text(
@@ -98,16 +98,8 @@ class _VowelDetailPageState extends State<VowelDetailPage> {
               style: const TextStyle(
                 color: Colors.black87,
                 fontWeight: FontWeight.bold,
-                fontSize: 18,
               ),
             ),
-            centerTitle: false,
-            actions: [
-              LanguageToggleButton(
-                isEnglish: isEnglish,
-                onChanged: (v) => setState(() => isEnglish = v),
-              ),
-            ],
           ),
           body: ListView(
             padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),

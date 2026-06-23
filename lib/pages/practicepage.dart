@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/widgets/language_toggle_button.dart';
 import 'package:frontend/pages/practice/vowel_grid_page.dart';
+import 'package:frontend/services/language_controller.dart';
 import 'package:get/get.dart';
 
 class Practicepage extends StatefulWidget {
@@ -13,6 +13,12 @@ class Practicepage extends StatefulWidget {
 class _PracticepageState extends State<Practicepage> {
   bool isEnglish = true;
   String t(String en, String th) => isEnglish ? en : th;
+
+  @override
+  void initState() {
+    super.initState();
+    isEnglish = Get.find<LanguageController>().isEnglish;
+  }
 
   Widget _buildCategoryCard({
     required String title,
@@ -76,12 +82,6 @@ class _PracticepageState extends State<Practicepage> {
           style: const TextStyle(
               color: Colors.black87, fontWeight: FontWeight.bold),
         ),
-        actions: [
-          LanguageToggleButton(
-            isEnglish: isEnglish,
-            onChanged: (v) => setState(() => isEnglish = v),
-          ),
-        ],
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

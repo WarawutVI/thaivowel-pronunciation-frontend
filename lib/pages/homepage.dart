@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:frontend/services/language_controller.dart';
 import 'package:frontend/widgets/language_toggle_button.dart';
 import 'package:frontend/pages/lessonspage.dart';
 import 'package:frontend/pages/practicepage.dart';
@@ -195,7 +196,10 @@ class _HomepageState extends State<Homepage> {
         actions: [
           LanguageToggleButton(
             isEnglish: isEnglish,
-            onChanged: (v) => setState(() => isEnglish = v),
+            onChanged: (v) {
+              setState(() => isEnglish = v);
+              Get.find<LanguageController>().setLanguage(v);
+            },
           ),
           IconButton(
             onPressed: _signOut,

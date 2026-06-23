@@ -4,9 +4,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:frontend/services/language_controller.dart';
 import 'package:frontend/services/practice_api.dart';
 import 'package:frontend/services/vowel_utils.dart';
-import 'package:frontend/widgets/language_toggle_button.dart';
 import 'package:frontend/widgets/waveform_display.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
@@ -61,7 +61,7 @@ class _RecordingPageState extends State<RecordingPage> {
   @override
   void initState() {
     super.initState();
-    isEnglish = widget.isEnglish;
+    isEnglish = Get.find<LanguageController>().isEnglish;
     _statusText = t(
       'Press the mic and speak for $_recordSeconds seconds.',
       'กดไมค์แล้วพูด $_recordSeconds วินาที',
@@ -406,12 +406,6 @@ class _RecordingPageState extends State<RecordingPage> {
           style: const TextStyle(
               color: Colors.black87, fontWeight: FontWeight.bold),
         ),
-        actions: [
-          LanguageToggleButton(
-            isEnglish: isEnglish,
-            onChanged: (v) => setState(() => isEnglish = v),
-          ),
-        ],
       ),
       body: Center(
         child: Padding(
