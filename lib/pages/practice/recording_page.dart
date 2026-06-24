@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:frontend/pages/progressELM/progress_shared.dart';
 import 'package:frontend/services/language_controller.dart';
 import 'package:frontend/services/practice_api.dart';
 import 'package:frontend/services/vowel_utils.dart';
@@ -186,6 +187,7 @@ class _RecordingPageState extends State<RecordingPage> {
         firebaseUid: firebaseUid,
         lessonId: widget.lessonId,
         confidence: result.confidence,
+        assessmentLevel: result.assessmentLevel,
         isPassed: result.isPassed,
         durationSeconds: duration,
       );
@@ -194,6 +196,7 @@ class _RecordingPageState extends State<RecordingPage> {
         lessonId: widget.lessonId,
         isCompleted: result.isPassed,
         bestAccuracy: result.confidence,
+        assessmentLevel: result.assessmentLevel,
       );
       PracticeApi.updateStreak(firebaseUid);
 
@@ -250,7 +253,8 @@ class _RecordingPageState extends State<RecordingPage> {
   }
 
   void _showResultModal() {
-    final passed = _confidence >= 0.70;
+    final passed = _confidence >= 0.51;
+    final level = assessmentLabel(_confidence, isEnglish);
     final suggestion = _buildSuggestion();
 
     showDialog(
@@ -269,15 +273,11 @@ class _RecordingPageState extends State<RecordingPage> {
                   // Title
                   Center(
                     child: Text(
-                      passed
-                          ? t('Correct 🎉', 'ถูกต้อง 🎉')
-                          : t('Incorrect', 'ไม่ถูกต้อง'),
+                      passed ? '$level 🎉' : level,
                       style: TextStyle(
                         fontSize: 26,
                         fontWeight: FontWeight.bold,
-                        color: passed
-                            ? const Color(0xFF1A7A50)
-                            : Colors.redAccent,
+                        color: accuracyColor(_confidence),
                       ),
                     ),
                   ),

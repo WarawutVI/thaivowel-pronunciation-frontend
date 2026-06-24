@@ -82,7 +82,7 @@ class VowelProgress {
         symbol: j['symbol'] as String,
         vowelType: j['vowel_type'] as String,
         completed: (j['completed'] ?? 0) as int,
-        total: (j['total'] ?? 9) as int,
+        total: (j['total'] ?? 6) as int,
       );
 }
 
@@ -128,22 +128,30 @@ class VowelFormant {
 class PredictResult {
   final double confidence;
   final bool isPassed;
+  final String assessmentLevel;
   final double userF1;
   final double userF2;
 
   const PredictResult({
     required this.confidence,
     required this.isPassed,
+    required this.assessmentLevel,
     required this.userF1,
     required this.userF2,
   });
 
   factory PredictResult.fromJson(Map<String, dynamic> j) {
     final conf = (j['confidence'] as num? ?? 0.0).toDouble();
+    final pct = (conf * 100).round();
     final formants = j['user_formants'] as Map<String, dynamic>? ?? {};
+    final level = pct >= 81 ? 'Excellent'
+                : pct >= 51 ? 'Good'
+                : pct >= 30 ? 'Needs Improvement'
+                :             'Incorrect';
     return PredictResult(
       confidence: conf,
-      isPassed: conf >= 0.70,
+      isPassed: pct >= 51,
+      assessmentLevel: level,
       userF1: (formants['F1'] as num? ?? 0.0).toDouble(),
       userF2: (formants['F2'] as num? ?? 0.0).toDouble(),
     );
@@ -306,7 +314,7 @@ class PracticeApi {
     return data.map((e) => LessonProgress.fromJson(e as Map<String, dynamic>)).toList();
   }
 
-  // POST Flask /predict2
+  // POST Flask /predict3
   static Future<PredictResult> predict(Uint8List audioBytes, int vowelIndex) async {
     final req = http.MultipartRequest('POST', Uri.parse('$_flaskBase/predict3'));
     req.headers.addAll(_headers);
@@ -327,6 +335,7 @@ class PracticeApi {
     required String firebaseUid,
     required int lessonId,
     required double confidence,
+    required String assessmentLevel,
     required bool isPassed,
     required int durationSeconds,
   }) async {
@@ -337,6 +346,7 @@ class PracticeApi {
         'firebase_uid': firebaseUid,
         'lesson_id': lessonId,
         'confidence': confidence,
+        'assessment_level': assessmentLevel,
         'is_passed': isPassed,
         'duration_seconds': durationSeconds,
       }),
@@ -349,6 +359,7 @@ class PracticeApi {
     required int lessonId,
     required bool isCompleted,
     required double bestAccuracy,
+    required String assessmentLevel,
   }) async {
     await http.post(
       Uri.parse('$_base/user_lesson_progress'),
@@ -358,6 +369,7 @@ class PracticeApi {
         'lesson_id': lessonId,
         'is_completed': isCompleted,
         'best_accuracy': bestAccuracy,
+        'assessment_level': assessmentLevel,
       }),
     );
   }
