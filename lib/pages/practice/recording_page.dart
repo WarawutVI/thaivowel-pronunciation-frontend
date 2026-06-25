@@ -37,7 +37,7 @@ class RecordingPage extends StatefulWidget {
 }
 
 class _RecordingPageState extends State<RecordingPage> {
-  static const int _recordSeconds = 2;
+  static const int _recordSeconds = 3;
 
   late bool isEnglish;
   final AudioRecorder _recorder = AudioRecorder();
