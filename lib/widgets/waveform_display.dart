@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/services/vowel_utils.dart';
 
-/// A self-contained waveform comparison widget.
-/// Shows the reference (orange) and user (green) audio curves
-/// side-by-side with a legend below.
+/// Shows reference (orange) and user (green) bar waveforms intersecting on one canvas.
 class WaveformDisplay extends StatelessWidget {
   final List<double> refSamples;
   final List<double> userSamples;
@@ -17,7 +15,7 @@ class WaveformDisplay extends StatelessWidget {
     required this.userSamples,
     this.refLabel = 'Reference',
     this.userLabel = 'Your voice',
-    this.height = 140,
+    this.height = 120,
   });
 
   @override
@@ -38,7 +36,7 @@ class WaveformDisplay extends StatelessWidget {
             child: LayoutBuilder(
               builder: (ctx, constraints) => CustomPaint(
                 size: Size(constraints.maxWidth, height),
-                painter: WaveformPainter(
+                painter: DualBarWaveformPainter(
                   refSamples: refSamples,
                   userSamples: userSamples,
                 ),
@@ -72,14 +70,14 @@ class _LegendDot extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          width: 12,
-          height: 12,
+          width: 10,
+          height: 10,
           decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
         const SizedBox(width: 4),
         Text(
           label,
-          style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+          style: TextStyle(fontSize: 11, color: Colors.grey.shade700),
         ),
       ],
     );

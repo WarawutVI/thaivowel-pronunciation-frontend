@@ -135,3 +135,127 @@ class WaveformPainter extends CustomPainter {
   bool shouldRepaint(covariant WaveformPainter old) =>
       old.refSamples != refSamples || old.userSamples != userSamples;
 }
+
+/// Draws a single waveform as filled vertical bars (mirrored above and below center).
+class BarWaveformPainter extends CustomPainter {
+  final List<double> samples;
+  final Color color;
+
+  const BarWaveformPainter({required this.samples, required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (samples.isEmpty) return;
+
+    final midY = size.height / 2;
+    final barW = ((size.width / samples.length) * 0.65).clamp(1.0, 4.0);
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+
+    for (int i = 0; i < samples.length; i++) {
+      final x = (i / samples.length) * size.width + barW / 2;
+      final h = (samples[i].abs() * midY * 0.9).clamp(1.5, midY);
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromCenter(
+            center: Offset(x, midY),
+            width: barW,
+            height: h * 2,
+          ),
+          const Radius.circular(2),
+        ),
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant BarWaveformPainter old) =>
+      old.samples != samples || old.color != color;
+}
+
+/// Draws reference (orange) and user (green) as paired bars side by side.
+/// Each position shows: [orange ref] [green user] so height differences are obvious.
+class DualBarWaveformPainter extends CustomPainter {
+  final List<double> refSamples;
+  final List<double> userSamples;
+  final int barCount;
+
+  const DualBarWaveformPainter({
+    required this.refSamples,
+    required this.userSamples,
+    this.barCount = 40,
+  });
+
+  List<double> _downsample(List<double> samples, int n) {
+    if (samples.isEmpty) return List.filled(n, 0.0);
+    final result    = List<double>.filled(n, 0.0);
+    final groupSize = samples.length / n;
+    for (int i = 0; i < n; i++) {
+      final start = (i * groupSize).floor();
+      final end   = ((i + 1) * groupSize).ceil().clamp(0, samples.length);
+      double peak = 0.0;
+      for (int j = start; j < end; j++) {
+        final v = samples[j].abs();
+        if (v > peak) peak = v;
+      }
+      result[i] = peak;
+    }
+    return result;
+  }
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final ref  = _downsample(refSamples,  barCount);
+    final user = _downsample(userSamples, barCount);
+
+    final midY    = size.height / 2;
+    final slot    = size.width / barCount;   // width per pair
+    final barW    = (slot * 0.38).clamp(1.5, 6.0);
+    final gap     = barW * 0.3;
+
+    final refPaint = Paint()
+      ..color = Colors.orange
+      ..style = PaintingStyle.fill;
+    final userPaint = Paint()
+      ..color = const Color(0xFF2ECC71)
+      ..style = PaintingStyle.fill;
+
+    for (int i = 0; i < barCount; i++) {
+      final centerX = slot * i + slot / 2;
+
+      // orange ref — left of center
+      final rh = (ref[i]  * midY * 0.9).clamp(1.5, midY);
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromCenter(
+            center: Offset(centerX - barW / 2 - gap / 2, midY),
+            width: barW, height: rh * 2,
+          ),
+          const Radius.circular(3),
+        ),
+        refPaint,
+      );
+
+      // green user — right of center
+      final uh = (user[i] * midY * 0.9).clamp(1.5, midY);
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromCenter(
+            center: Offset(centerX + barW / 2 + gap / 2, midY),
+            width: barW, height: uh * 2,
+          ),
+          const Radius.circular(3),
+        ),
+        userPaint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant DualBarWaveformPainter old) =>
+      old.refSamples != refSamples ||
+      old.userSamples != userSamples ||
+      old.barCount != barCount;
+}
