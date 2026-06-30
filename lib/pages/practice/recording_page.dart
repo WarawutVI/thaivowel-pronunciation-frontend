@@ -1,17 +1,12 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:frontend/pages/progressELM/progress_shared.dart';
 import 'package:frontend/services/language_controller.dart';
 import 'package:frontend/services/practice_api.dart';
-import 'package:frontend/services/vowel_utils.dart';
-<<<<<<< Updated upstream
-=======
-import 'package:frontend/services/language_controller.dart';
-import 'package:frontend/widgets/language_toggle_button.dart';
->>>>>>> Stashed changes
 import 'package:frontend/widgets/waveform_display.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
@@ -41,7 +36,7 @@ class RecordingPage extends StatefulWidget {
 }
 
 class _RecordingPageState extends State<RecordingPage> {
-  static const int _recordSeconds = 2;
+  static const int _recordSeconds = 3;
 
   late bool isEnglish;
   final AudioRecorder _recorder = AudioRecorder();
@@ -61,7 +56,8 @@ class _RecordingPageState extends State<RecordingPage> {
   String get firebaseUid => FirebaseAuth.instance.currentUser!.uid;
   String t(String en, String th) => isEnglish ? en : th;
 
-  int get _vowelIndex => vowelIdToIndex(widget.vowelId);
+  // vowelId is 1-based in DB; model index is 0-based
+  int get _vowelIndex => widget.vowelId - 1;
 
   @override
   void initState() {
@@ -80,33 +76,12 @@ class _RecordingPageState extends State<RecordingPage> {
     super.dispose();
   }
 
-  Future<List<double>> _loadRefWaveform() async {
-    try {
-      final path = 'assets/references/${widget.vowelId}/${widget.lessonOrder}.wav';
-      print('Loading reference waveform from: $path');
-      final data = await rootBundle.load(path);
-      return preprocessSamples(decodePcmWav(data.buffer.asUint8List()));
-    } catch (e) {
-      debugPrint('Ref waveform load error: $e');
-      return [];
-    }
-  }
-
   Future<Uint8List> _getAudioBytes(String path) async {
     if (kIsWeb) {
       final res = await http.get(Uri.parse(path));
       return res.bodyBytes;
     }
     return File(path).readAsBytes();
-  }
-
-  Future<List<double>> _loadUserWaveform(Uint8List bytes) async {
-    try {
-      return preprocessSamples(decodePcmWav(bytes));
-    } catch (e) {
-      debugPrint('User waveform load error: $e');
-      return [];
-    }
   }
 
   Future<void> _startRecording() async {
@@ -148,8 +123,7 @@ class _RecordingPageState extends State<RecordingPage> {
     });
 
     _countdownTimer?.cancel();
-    _countdownTimer =
-        Timer.periodic(const Duration(seconds: 1), (timer) async {
+    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) async {
       if (_remainingSeconds <= 1) {
         timer.cancel();
         final finalPath = await _recorder.stop();
@@ -169,28 +143,26 @@ class _RecordingPageState extends State<RecordingPage> {
   }
 
   Future<void> _submitToApi(String filePath) async {
-    final recordStart = DateTime.now()
-        .subtract(Duration(seconds: _recordSeconds));
+    final recordStart = DateTime.now().subtract(Duration(seconds: _recordSeconds));
     try {
       final audioBytes = await _getAudioBytes(filePath);
+
+      // predict3 returns confidence, assessment, formants, ref_wave, user_wave
       final result = await PracticeApi.predict(audioBytes, _vowelIndex);
       final duration = DateTime.now().difference(recordStart).inSeconds;
 
-      final waves = await Future.wait([
-        _loadRefWaveform(),
-        _loadUserWaveform(audioBytes),
-      ]);
-
+      // Fetch reference formants for suggestion (non-blocking)
       VowelFormant? refFormant;
       try {
         refFormant = await PracticeApi.fetchVowelFormant(widget.vowelId);
       } catch (_) {}
 
-      // Save to backend (fire-and-forget; don't block UI)
+      // Save to backend (fire-and-forget)
       PracticeApi.saveSession(
         firebaseUid: firebaseUid,
         lessonId: widget.lessonId,
         confidence: result.confidence,
+        assessmentLevel: result.assessmentLevel,
         isPassed: result.isPassed,
         durationSeconds: duration,
       );
@@ -199,19 +171,21 @@ class _RecordingPageState extends State<RecordingPage> {
         lessonId: widget.lessonId,
         isCompleted: result.isPassed,
         bestAccuracy: result.confidence,
+        assessmentLevel: result.assessmentLevel,
       );
       PracticeApi.updateStreak(firebaseUid);
 
       setState(() {
-        _confidence = result.confidence;
-        _userF1 = result.userF1;
-        _userF2 = result.userF2;
-        _refFormant = refFormant;
-        _refSamples = waves[0];
-        _userSamples = waves[1];
-        _statusText =
-            t('Score: ${(_confidence * 100).toStringAsFixed(1)}%',
-              'คะแนน: ${(_confidence * 100).toStringAsFixed(1)}%');
+        _confidence   = result.confidence;
+        _userF1       = result.userF1;
+        _userF2       = result.userF2;
+        _refFormant   = refFormant;
+        _refSamples   = result.refWave;   // DTW-aligned ref from backend
+        _userSamples  = result.userWave;  // DTW-aligned user from backend
+        _statusText   = t(
+          'Score: ${(_confidence * 100).toStringAsFixed(1)}%',
+          'คะแนน: ${(_confidence * 100).toStringAsFixed(1)}%',
+        );
       });
 
       _showResultModal();
@@ -224,13 +198,13 @@ class _RecordingPageState extends State<RecordingPage> {
     final ref = _refFormant;
     if (ref == null || (_userF1 == 0 && _userF2 == 0)) return '';
 
+    final f1Diff = _userF1 - ref.f1;
+    final f2Diff = _userF2 - ref.f2;
+    const f1Threshold = 100.0; // Hz margin
+    const f2Threshold = 200.0;
+
     final List<String> partsEn = [];
     final List<String> partsTh = [];
-
-    final f1Diff = _userF1;
-    final f2Diff = _userF2;
-    final f1Threshold = ref.f1 ;
-    final f2Threshold = ref.f2;
 
     if (f1Diff > f1Threshold) {
       partsEn.addAll(['closing your mouth slightly', 'raising your tongue']);
@@ -255,7 +229,8 @@ class _RecordingPageState extends State<RecordingPage> {
   }
 
   void _showResultModal() {
-    final passed = _confidence >= 0.70;
+    final passed     = _confidence >= 0.51;
+    final level      = assessmentLabel(_confidence, isEnglish);
     final suggestion = _buildSuggestion();
 
     showDialog(
@@ -274,21 +249,17 @@ class _RecordingPageState extends State<RecordingPage> {
                   // Title
                   Center(
                     child: Text(
-                      passed
-                          ? t('Correct 🎉', 'ถูกต้อง 🎉')
-                          : t('Incorrect', 'ไม่ถูกต้อง'),
+                      passed ? '$level 🎉' : level,
                       style: TextStyle(
                         fontSize: 26,
                         fontWeight: FontWeight.bold,
-                        color: passed
-                            ? const Color(0xFF1A7A50)
-                            : Colors.redAccent,
+                        color: accuracyColor(_confidence),
                       ),
                     ),
                   ),
                   const SizedBox(height: 16),
 
-                  // Waveform
+                  // Waveform (DTW-aligned from backend)
                   WaveformDisplay(
                     refSamples: _refSamples,
                     userSamples: _userSamples,
@@ -312,8 +283,8 @@ class _RecordingPageState extends State<RecordingPage> {
                     ),
                   ),
 
-                  // Suggestion
-                  if (suggestion.isNotEmpty) ...[
+                  // Suggestion — only shown when not passed
+                  if (suggestion.isNotEmpty && !passed) ...[
                     const SizedBox(height: 14),
                     RichText(
                       text: TextSpan(
@@ -351,8 +322,7 @@ class _RecordingPageState extends State<RecordingPage> {
                                 borderRadius: BorderRadius.circular(10)),
                           ),
                           child: Text(t('Try Again', 'ลองอีกครั้ง'),
-                              style: const TextStyle(
-                                  color: Color(0xFF1A7A50))),
+                              style: const TextStyle(color: Color(0xFF1A7A50))),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -384,8 +354,7 @@ class _RecordingPageState extends State<RecordingPage> {
                 child: Container(
                   decoration: BoxDecoration(
                       color: Colors.grey[200], shape: BoxShape.circle),
-                  child:
-                      Icon(Icons.close, color: Colors.grey[700], size: 24),
+                  child: Icon(Icons.close, color: Colors.grey[700], size: 24),
                 ),
               ),
             ),
@@ -418,12 +387,6 @@ class _RecordingPageState extends State<RecordingPage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Text(
-              //   widget.vowelSymbol,
-              //   style: const TextStyle(
-              //       fontSize: 36, color: Colors.grey),
-              // // ),
-              // const SizedBox(height: 8),
               Text(
                 widget.word,
                 style: const TextStyle(
@@ -436,8 +399,7 @@ class _RecordingPageState extends State<RecordingPage> {
               Text(
                 _statusText,
                 textAlign: TextAlign.center,
-                style:
-                    const TextStyle(fontSize: 15, color: Colors.black54),
+                style: const TextStyle(fontSize: 15, color: Colors.black54),
               ),
               const SizedBox(height: 40),
               GestureDetector(

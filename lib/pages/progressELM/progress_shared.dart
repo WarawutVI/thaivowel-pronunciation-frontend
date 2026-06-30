@@ -129,9 +129,20 @@ class FilterPill extends StatelessWidget {
 /// Returns EN or TH string based on language flag.
 String pt(bool isEnglish, String en, String th) => isEnglish ? en : th;
 
-/// Maps a 0–1 accuracy value to a traffic-light color.
+/// Maps a 0–1 confidence value to a 4-level assessment color.
 Color accuracyColor(double v) {
-  if (v >= 0.70) return const Color(0xFF1A7A50);
-  if (v >= 0.50) return const Color(0xFFFF8C42);
-  return const Color(0xFFE05C6A);
+  final pct = (v * 100).round();
+  if (pct >= 81) return const Color(0xFF1A7A50); // Excellent
+  if (pct >= 51) return const Color(0xFF2A9B6A); // Good
+  if (pct >= 30) return const Color(0xFFFF8C42); // Needs Improvement
+  return const Color(0xFFE05C6A);                // Incorrect
+}
+
+/// Returns a 4-level assessment label based on confidence (0–1).
+String assessmentLabel(double confidence, bool isEnglish) {
+  final pct = (confidence * 100).round();
+  if (pct >= 81) return isEnglish ? 'Excellent'         : 'ยอดเยี่ยม';
+  if (pct >= 51) return isEnglish ? 'Good'              : 'ดี';
+  if (pct >= 30) return isEnglish ? 'Needs Improvement' : 'ต้องพัฒนา';
+  return             isEnglish ? 'Incorrect'         : 'ไม่ถูกต้อง';
 }

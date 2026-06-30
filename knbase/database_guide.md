@@ -28,29 +28,27 @@ vowels
 
 | คอลัมน์ | ประเภท | Constraint | คำอธิบาย | ใช้กับ widget |
 |---|---|---|---|---|
-| `id` | INT | PK, AUTO_INCREMENT | Primary key | — |
-| `firebase_uid` | VARCHAR(128) | NOT NULL, UNIQUE | UID จาก Firebase Auth ใช้เชื่อม Email & Google | ทุก widget |
+| `firebase_uid` | VARCHAR(128) | PRIMARY KEY | UID จาก Firebase Auth | ทุก widget |
 | `username` | VARCHAR(100) | NOT NULL | ชื่อที่แสดงในแอป | Profile |
-| `email` | VARCHAR(255) | NOT NULL, UNIQUE | อีเมลจาก Firebase | Profile |
-| `gender` | ENUM('male','female','other') | NOT NULL | เพศผู้ใช้ | Demographic (thesis) |
-| `age` | TINYINT UNSIGNED | NOT NULL | อายุผู้ใช้ (0–255) | Demographic (thesis) |
-| `login_provider` | ENUM('email','google') | NOT NULL | วิธี login | Profile |
+| `email` | VARCHAR(255) | NOT NULL | อีเมลจาก Firebase | Profile |
+| `gender` | VARCHAR(20) | — | เพศผู้ใช้ | Demographic (thesis) |
+| `age` | INT | — | อายุผู้ใช้ | Demographic (thesis) |
+| `nationality` | VARCHAR(100) | NOT NULL, DEFAULT `'Thai'` | สัญชาติผู้ใช้ | Demographic (thesis) |
+| `login_provider` | VARCHAR(20) | — | วิธี login (`email` / `google`) | Profile |
 | `created_at` | DATETIME | DEFAULT CURRENT_TIMESTAMP | วันสมัครสมาชิก | — |
-| `updated_at` | DATETIME | ON UPDATE CURRENT_TIMESTAMP | วันแก้ไขโปรไฟล์ล่าสุด | — |
 
 ### SQL
 
 ```sql
 CREATE TABLE users (
-  id              INT AUTO_INCREMENT PRIMARY KEY,
-  firebase_uid    VARCHAR(128) NOT NULL UNIQUE,
-  username        VARCHAR(100) NOT NULL,
-  email           VARCHAR(255) NOT NULL UNIQUE,
-  gender          ENUM('male', 'female', 'other') NOT NULL,
-  age             TINYINT UNSIGNED NOT NULL,
-  login_provider  ENUM('email', 'google') NOT NULL,
-  created_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at      DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  firebase_uid   VARCHAR(128) PRIMARY KEY,
+  username       VARCHAR(100) NOT NULL,
+  email          VARCHAR(255) NOT NULL,
+  gender         VARCHAR(20),
+  age            INT,
+  nationality    VARCHAR(100) NOT NULL DEFAULT 'Thai',
+  login_provider VARCHAR(20),
+  created_at     DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 ```
 
@@ -58,7 +56,7 @@ CREATE TABLE users (
 
 **ดึงข้อมูล Profile**
 ```sql
-SELECT username, email, gender, age, login_provider, created_at
+SELECT username, email, gender, age, nationality, login_provider, created_at
 FROM users
 WHERE firebase_uid = ?;
 ```
@@ -71,24 +69,19 @@ WHERE firebase_uid = ?;
 
 | คอลัมน์ | ประเภท | Constraint | คำอธิบาย | ใช้กับ widget |
 |---|---|---|---|---|
-| `id` | INT | PK, AUTO_INCREMENT | — | — |
-| `firebase_uid` | VARCHAR(128) | FK → users.firebase_uid, UNIQUE | เจ้าของ streak | 🔥 Streak widget |
+| `firebase_uid` | VARCHAR(128) | PRIMARY KEY | เจ้าของ streak | 🔥 Streak widget |
 | `current_streak` | INT | DEFAULT 0 | จำนวนวันที่ฝึกต่อเนื่องปัจจุบัน | 🔥 Streak widget |
 | `longest_streak` | INT | DEFAULT 0 | สถิติ streak ยาวที่สุดตลอดกาล | 🔥 Streak widget, Thesis |
-| `last_practice_date` | DATE | DEFAULT NULL | วันที่ฝึกล่าสุด ใช้คำนวณ streak | 🔥 Streak widget |
-| `updated_at` | DATETIME | ON UPDATE CURRENT_TIMESTAMP | อัปเดตล่าสุด | — |
+| `last_practice_date` | DATE | — | วันที่ฝึกล่าสุด ใช้คำนวณ streak | 🔥 Streak widget |
 
 ### SQL
 
 ```sql
 CREATE TABLE user_streaks (
-  id                  INT AUTO_INCREMENT PRIMARY KEY,
-  firebase_uid        VARCHAR(128) NOT NULL UNIQUE,
-  current_streak      INT DEFAULT 0,
-  longest_streak      INT DEFAULT 0,
-  last_practice_date  DATE DEFAULT NULL,
-  updated_at          DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (firebase_uid) REFERENCES users(firebase_uid) ON DELETE CASCADE
+  firebase_uid       VARCHAR(128) PRIMARY KEY,
+  current_streak     INT DEFAULT 0,
+  longest_streak     INT DEFAULT 0,
+  last_practice_date DATE
 );
 ```
 
@@ -139,18 +132,57 @@ WHERE firebase_uid = ?;
 
 | คอลัมน์ | ประเภท | Constraint | คำอธิบาย | ใช้กับ widget |
 |---|---|---|---|---|
-| `id` | TINYINT UNSIGNED | PK, AUTO_INCREMENT | id สระ 1–18 | — |
-| `symbol` | VARCHAR(10) | NOT NULL | ตัวสระ เช่น อา, อิ, อะ | Practice page, History |
+| `id` | INT | PK, AUTO_INCREMENT | id สระ 1–18 | — |
+| `symbol` | VARCHAR(20) | NOT NULL | ตัวสระ เช่น อา, อิ, อะ | Practice page, History |
 | `vowel_type` | ENUM('short','long') | NOT NULL | Short Vowels / Long Vowels | Practice page, Accuracy donut, Trend |
+| `description_en` | TEXT | — | คำอธิบายสระ (อังกฤษ) | Lessons page |
+| `description_th` | TEXT | — | คำอธิบายสระ (ไทย) | Lessons page |
+| `lips_en` | VARCHAR(100) | — | วิธีเปล่งเสียง: ริมฝีปาก (อังกฤษ) | Pronunciation guide |
+| `lips_th` | VARCHAR(100) | — | วิธีเปล่งเสียง: ริมฝีปาก (ไทย) | Pronunciation guide |
+| `tongue_en` | VARCHAR(100) | — | วิธีเปล่งเสียง: ลิ้น (อังกฤษ) | Pronunciation guide |
+| `tongue_th` | VARCHAR(100) | — | วิธีเปล่งเสียง: ลิ้น (ไทย) | Pronunciation guide |
+| `jaw_en` | VARCHAR(100) | — | วิธีเปล่งเสียง: ขากรรไกร (อังกฤษ) | Pronunciation guide |
+| `jaw_th` | VARCHAR(100) | — | วิธีเปล่งเสียง: ขากรรไกร (ไทย) | Pronunciation guide |
+| `link_video` | VARCHAR(500) | — | URL วิดีโอประกอบการสอนสระ | Lessons page |
+| `f1` | FLOAT | — | ค่า Formant 1 อ้างอิง (Hz) | Pronunciation guide, Thesis |
+| `f2` | FLOAT | — | ค่า Formant 2 อ้างอิง (Hz) | Pronunciation guide, Thesis |
+| `unicode_phonetic` | VARCHAR(50) | — | สัญลักษณ์ IPA/Unicode เช่น `/aː/`, `/i/` | Lessons page |
 
 ### SQL
 
 ```sql
 CREATE TABLE vowels (
-  id          TINYINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  symbol      VARCHAR(10) NOT NULL,
-  vowel_type  ENUM('short', 'long') NOT NULL
+  id                INT AUTO_INCREMENT PRIMARY KEY,
+  symbol            VARCHAR(20)  NOT NULL,
+  vowel_type        ENUM('short','long') NOT NULL,
+  description_en    TEXT,
+  description_th    TEXT,
+  lips_en           VARCHAR(100),
+  lips_th           VARCHAR(100),
+  tongue_en         VARCHAR(100),
+  tongue_th         VARCHAR(100),
+  jaw_en            VARCHAR(100),
+  jaw_th            VARCHAR(100),
+  link_video        VARCHAR(500),
+  f1                FLOAT,
+  f2                FLOAT,
+  unicode_phonetic  VARCHAR(50)
 );
+```
+
+### Migration SQL (ถ้า table มีอยู่แล้ว)
+
+```sql
+-- ลบ columns เก่า + เพิ่ม columns ใหม่
+ALTER TABLE vowels
+  DROP COLUMN name_en,
+  DROP COLUMN name_th,
+  DROP COLUMN duration_en,
+  DROP COLUMN duration_th,
+  ADD COLUMN link_video       VARCHAR(500),
+  ADD COLUMN f1               FLOAT,
+  ADD COLUMN f2               FLOAT,
+  ADD COLUMN unicode_phonetic VARCHAR(50);
 ```
 
 ### Seed Data (สระทั้ง 18 ตัว)
@@ -187,22 +219,115 @@ INSERT INTO vowels (symbol, vowel_type) VALUES
 
 | คอลัมน์ | ประเภท | Constraint | คำอธิบาย | ใช้กับ widget |
 |---|---|---|---|---|
-| `id` | SMALLINT UNSIGNED | PK, AUTO_INCREMENT | Lesson id | — |
-| `vowel_id` | TINYINT UNSIGNED | FK → vowels.id | สระที่ lesson นี้สังกัด | Practice page |
-| `lesson_order` | TINYINT UNSIGNED | NOT NULL | ลำดับที่ 1–9 หรือ 1–10 | Practice page (card order) |
-| `lesson_name` | VARCHAR(100) | NOT NULL | ชื่อแบบฝึกย่อย เช่น กา, ขา, งา | การ์ดบน Practice page |
+| `id` | INT | PK, AUTO_INCREMENT | Lesson id | — |
+| `vowel_id` | INT | FK → vowels.id, NOT NULL | สระที่ lesson นี้สังกัด | Practice page |
+| `lesson_order` | INT | NOT NULL | ลำดับที่ 1–9 | Practice page (card order) |
+| `lesson_name` | VARCHAR(50) | NOT NULL | ชื่อแบบฝึกย่อย เช่น กา, ขา, งา | การ์ดบน Practice page |
 
 ### SQL
 
 ```sql
 CREATE TABLE vowel_lessons (
-  id            SMALLINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  vowel_id      TINYINT UNSIGNED NOT NULL,
-  lesson_order  TINYINT UNSIGNED NOT NULL,
-  lesson_name   VARCHAR(100) NOT NULL,
-  UNIQUE KEY uq_vowel_order (vowel_id, lesson_order),
+  id           INT AUTO_INCREMENT PRIMARY KEY,
+  vowel_id     INT NOT NULL,
+  lesson_order INT NOT NULL,
+  lesson_name  VARCHAR(50) NOT NULL,
   FOREIGN KEY (vowel_id) REFERENCES vowels(id)
 );
+```
+
+### Seed Data (162 rows — 9 words × 18 vowels)
+
+```sql
+-- Vowel 1: อา (long)
+INSERT INTO vowel_lessons (vowel_id, lesson_order, lesson_name) VALUES
+(1,1,'กา'),(1,2,'ขา'),(1,3,'งา'),(1,4,'จา'),(1,5,'ซา'),
+(1,6,'ดา'),(1,7,'นา'),(1,8,'บา'),(1,9,'ปา');
+
+-- Vowel 2: อี (long)
+INSERT INTO vowel_lessons (vowel_id, lesson_order, lesson_name) VALUES
+(2,1,'กี'),(2,2,'ขี'),(2,3,'งี'),(2,4,'จี'),(2,5,'ซี'),
+(2,6,'ดี'),(2,7,'นี'),(2,8,'บี'),(2,9,'ปี');
+
+-- Vowel 3: อือ (long)
+INSERT INTO vowel_lessons (vowel_id, lesson_order, lesson_name) VALUES
+(3,1,'กือ'),(3,2,'ขือ'),(3,3,'งือ'),(3,4,'จือ'),(3,5,'ซือ'),
+(3,6,'ดือ'),(3,7,'นือ'),(3,8,'บือ'),(3,9,'ปือ');
+
+-- Vowel 4: อู (long)
+INSERT INTO vowel_lessons (vowel_id, lesson_order, lesson_name) VALUES
+(4,1,'กู'),(4,2,'ขู'),(4,3,'งู'),(4,4,'จู'),(4,5,'ซู'),
+(4,6,'ดู'),(4,7,'นู'),(4,8,'บู'),(4,9,'ปู');
+
+-- Vowel 5: เอ (long)
+INSERT INTO vowel_lessons (vowel_id, lesson_order, lesson_name) VALUES
+(5,1,'เก'),(5,2,'เข'),(5,3,'เง'),(5,4,'เจ'),(5,5,'เซ'),
+(5,6,'เด'),(5,7,'เน'),(5,8,'เบ'),(5,9,'เป');
+
+-- Vowel 6: แอ (long)
+INSERT INTO vowel_lessons (vowel_id, lesson_order, lesson_name) VALUES
+(6,1,'แก'),(6,2,'แข'),(6,3,'แง'),(6,4,'แจ'),(6,5,'แซ'),
+(6,6,'แด'),(6,7,'แน'),(6,8,'แบ'),(6,9,'แป');
+
+-- Vowel 7: โอ (long)
+INSERT INTO vowel_lessons (vowel_id, lesson_order, lesson_name) VALUES
+(7,1,'โก'),(7,2,'โข'),(7,3,'โง'),(7,4,'โจ'),(7,5,'โซ'),
+(7,6,'โด'),(7,7,'โน'),(7,8,'โบ'),(7,9,'โป');
+
+-- Vowel 8: ออ (long)
+INSERT INTO vowel_lessons (vowel_id, lesson_order, lesson_name) VALUES
+(8,1,'กอ'),(8,2,'ขอ'),(8,3,'งอ'),(8,4,'จอ'),(8,5,'ซอ'),
+(8,6,'ดอ'),(8,7,'นอ'),(8,8,'บอ'),(8,9,'ปอ');
+
+-- Vowel 9: เออ (long)
+INSERT INTO vowel_lessons (vowel_id, lesson_order, lesson_name) VALUES
+(9,1,'เกอ'),(9,2,'เขอ'),(9,3,'เงอ'),(9,4,'เจอ'),(9,5,'เซอ'),
+(9,6,'เดอ'),(9,7,'เนอ'),(9,8,'เบอ'),(9,9,'เปอ');
+
+-- Vowel 10: อะ (short)
+INSERT INTO vowel_lessons (vowel_id, lesson_order, lesson_name) VALUES
+(10,1,'กะ'),(10,2,'ขะ'),(10,3,'งะ'),(10,4,'จะ'),(10,5,'ซะ'),
+(10,6,'ดะ'),(10,7,'นะ'),(10,8,'บะ'),(10,9,'ปะ');
+
+-- Vowel 11: อิ (short)
+INSERT INTO vowel_lessons (vowel_id, lesson_order, lesson_name) VALUES
+(11,1,'กิ'),(11,2,'ขิ'),(11,3,'งิ'),(11,4,'จิ'),(11,5,'ซิ'),
+(11,6,'ดิ'),(11,7,'นิ'),(11,8,'บิ'),(11,9,'ปิ');
+
+-- Vowel 12: อึ (short)
+INSERT INTO vowel_lessons (vowel_id, lesson_order, lesson_name) VALUES
+(12,1,'กึ'),(12,2,'ขึ'),(12,3,'งึ'),(12,4,'จึ'),(12,5,'ซึ'),
+(12,6,'ดึ'),(12,7,'นึ'),(12,8,'บึ'),(12,9,'ปึ');
+
+-- Vowel 13: อุ (short)
+INSERT INTO vowel_lessons (vowel_id, lesson_order, lesson_name) VALUES
+(13,1,'กุ'),(13,2,'ขุ'),(13,3,'งุ'),(13,4,'จุ'),(13,5,'ซุ'),
+(13,6,'ดุ'),(13,7,'นุ'),(13,8,'บุ'),(13,9,'ปุ');
+
+-- Vowel 14: เอะ (short)
+INSERT INTO vowel_lessons (vowel_id, lesson_order, lesson_name) VALUES
+(14,1,'เกะ'),(14,2,'เขะ'),(14,3,'เงะ'),(14,4,'เจะ'),(14,5,'เซะ'),
+(14,6,'เดะ'),(14,7,'เนะ'),(14,8,'เบะ'),(14,9,'เปะ');
+
+-- Vowel 15: แอะ (short)
+INSERT INTO vowel_lessons (vowel_id, lesson_order, lesson_name) VALUES
+(15,1,'แกะ'),(15,2,'แขะ'),(15,3,'แงะ'),(15,4,'แจะ'),(15,5,'แซะ'),
+(15,6,'แดะ'),(15,7,'แนะ'),(15,8,'แบะ'),(15,9,'แปะ');
+
+-- Vowel 16: โอะ (short)
+INSERT INTO vowel_lessons (vowel_id, lesson_order, lesson_name) VALUES
+(16,1,'โกะ'),(16,2,'โขะ'),(16,3,'โงะ'),(16,4,'โจะ'),(16,5,'โซะ'),
+(16,6,'โดะ'),(16,7,'โนะ'),(16,8,'โบะ'),(16,9,'โปะ');
+
+-- Vowel 17: เอาะ (short)
+INSERT INTO vowel_lessons (vowel_id, lesson_order, lesson_name) VALUES
+(17,1,'เกาะ'),(17,2,'เขาะ'),(17,3,'เงาะ'),(17,4,'เจาะ'),(17,5,'เซาะ'),
+(17,6,'เดาะ'),(17,7,'เนาะ'),(17,8,'เบาะ'),(17,9,'เปาะ');
+
+-- Vowel 18: เออะ (short)
+INSERT INTO vowel_lessons (vowel_id, lesson_order, lesson_name) VALUES
+(18,1,'เกอะ'),(18,2,'เขอะ'),(18,3,'เงอะ'),(18,4,'เจอะ'),(18,5,'เซอะ'),
+(18,6,'เดอะ'),(18,7,'เนอะ'),(18,8,'เบอะ'),(18,9,'เปอะ');
 ```
 
 ---
@@ -214,12 +339,13 @@ CREATE TABLE vowel_lessons (
 | คอลัมน์ | ประเภท | Constraint | คำอธิบาย | ใช้กับ widget |
 |---|---|---|---|---|
 | `id` | INT | PK, AUTO_INCREMENT | — | — |
-| `firebase_uid` | VARCHAR(128) | FK → users.firebase_uid | เจ้าของ progress | — |
-| `lesson_id` | SMALLINT UNSIGNED | FK → vowel_lessons.id | แบบฝึกย่อยที่ทำ | Practice page cards |
-| `is_completed` | BOOLEAN | DEFAULT FALSE | TRUE = สีเขียว, FALSE = สีส้ม | สีการ์ด |
+| `firebase_uid` | VARCHAR(128) | NOT NULL | เจ้าของ progress | — |
+| `lesson_id` | INT | FK → vowel_lessons.id, NOT NULL | แบบฝึกย่อยที่ทำ | Practice page cards |
+| `is_completed` | TINYINT(1) | DEFAULT 0 | 1 = สีเขียว, 0 = สีส้ม | สีการ์ด |
 | `best_accuracy` | FLOAT | DEFAULT 0.0 | % accuracy สูงสุดที่เคยทำได้ | — |
-| `attempts` | SMALLINT UNSIGNED | DEFAULT 0 | ฝึก lesson นี้กี่ครั้งแล้ว | — |
-| `last_practiced_at` | DATETIME | DEFAULT NULL | ฝึกครั้งล่าสุดเมื่อไหร่ | History |
+| `assessment_level` | VARCHAR(20) | DEFAULT NULL | ระดับประเมินของ `best_accuracy` (Incorrect / Needs Improvement / Good / Excellent) | Practice page, History |
+| `attempts` | INT | DEFAULT 0 | ฝึก lesson นี้กี่ครั้งแล้ว | — |
+| `last_practiced_at` | DATETIME | — | ฝึกครั้งล่าสุดเมื่อไหร่ | History |
 
 ### SQL
 
@@ -227,14 +353,14 @@ CREATE TABLE vowel_lessons (
 CREATE TABLE user_lesson_progress (
   id                INT AUTO_INCREMENT PRIMARY KEY,
   firebase_uid      VARCHAR(128) NOT NULL,
-  lesson_id         SMALLINT UNSIGNED NOT NULL,
-  is_completed      BOOLEAN NOT NULL DEFAULT FALSE,
+  lesson_id         INT NOT NULL,
+  is_completed      TINYINT(1) DEFAULT 0,
   best_accuracy     FLOAT DEFAULT 0.0,
-  attempts          SMALLINT UNSIGNED DEFAULT 0,
-  last_practiced_at DATETIME DEFAULT NULL,
+  assessment_level  VARCHAR(20) DEFAULT NULL,
+  attempts          INT DEFAULT 0,
+  last_practiced_at DATETIME,
   UNIQUE KEY uq_user_lesson (firebase_uid, lesson_id),
-  FOREIGN KEY (firebase_uid) REFERENCES users(firebase_uid) ON DELETE CASCADE,
-  FOREIGN KEY (lesson_id)    REFERENCES vowel_lessons(id)
+  FOREIGN KEY (lesson_id) REFERENCES vowel_lessons(id)
 );
 ```
 
@@ -284,11 +410,13 @@ WHERE vowel_id = ?;
 **อัปเดตหลัง user ฝึกเสร็จ**
 ```sql
 INSERT INTO user_lesson_progress
-  (firebase_uid, lesson_id, is_completed, best_accuracy, attempts, last_practiced_at)
+  (firebase_uid, lesson_id, is_completed, best_accuracy, assessment_level, attempts, last_practiced_at)
 VALUES
-  (?, ?, ?, ?, 1, NOW())
+  (?, ?, ?, ?, ?, 1, NOW())
 ON DUPLICATE KEY UPDATE
   is_completed      = GREATEST(is_completed, VALUES(is_completed)),
+  -- อัปเดต assessment_level เฉพาะเมื่อทำคะแนนใหม่ดีกว่าเดิม (ให้ตรงกับ best_accuracy)
+  assessment_level  = IF(VALUES(best_accuracy) > best_accuracy, VALUES(assessment_level), assessment_level),
   best_accuracy     = GREATEST(best_accuracy, VALUES(best_accuracy)),
   attempts          = attempts + 1,
   last_practiced_at = NOW();
@@ -303,29 +431,27 @@ ON DUPLICATE KEY UPDATE
 | คอลัมน์ | ประเภท | Constraint | คำอธิบาย | ใช้กับ widget |
 |---|---|---|---|---|
 | `id` | INT | PK, AUTO_INCREMENT | — | — |
-| `firebase_uid` | VARCHAR(128) | FK → users.firebase_uid | เจ้าของ session | ทุก widget |
-| `lesson_id` | SMALLINT UNSIGNED | FK → vowel_lessons.id | lesson ที่ฝึก | Practice count, History |
-| `predicted_vowel_id` | TINYINT UNSIGNED | FK → vowels.id, NULL ได้ | AI ทายว่าเป็นสระอะไร | Confusion matrix (thesis) |
-| `confidence` | FLOAT | NOT NULL, DEFAULT 0.0 | ค่า confidence จาก CNN (ใช้แทน accuracy) | Trend, Donut, History, Thesis |
-| `is_passed` | BOOLEAN | DEFAULT FALSE | ผ่านเกณฑ์หรือไม่ (เช่น ≥ 70%) | History badge |
-| `duration_seconds` | TINYINT UNSIGNED | DEFAULT NULL | เวลาที่ใช้ต่อ session (วินาที) | Thesis analysis |
+| `firebase_uid` | VARCHAR(128) | NOT NULL | เจ้าของ session | ทุก widget |
+| `lesson_id` | INT | FK → vowel_lessons.id, NOT NULL | lesson ที่ฝึก | Practice count, History |
+| `confidence` | FLOAT | NOT NULL | ค่า confidence จาก CNN (ใช้แทน accuracy) | Trend, Donut, History, Thesis |
+| `assessment_level` | VARCHAR(20) | DEFAULT NULL | ระดับประเมินของ `confidence` (Incorrect / Needs Improvement / Good / Excellent) | History, Result page |
+| `is_passed` | TINYINT(1) | NOT NULL | ผ่านเกณฑ์หรือไม่ (accuracy ≥ 51% → ถึงระดับ Good ขึ้นไป) | History badge |
+| `duration_seconds` | INT | DEFAULT 0 | เวลาที่ใช้ต่อ session (วินาที) | Thesis analysis |
 | `practiced_at` | DATETIME | DEFAULT CURRENT_TIMESTAMP | วันเวลาที่ฝึก | Trend (group by date), History |
 
 ### SQL
 
 ```sql
 CREATE TABLE practice_sessions (
-  id                  INT AUTO_INCREMENT PRIMARY KEY,
-  firebase_uid        VARCHAR(128) NOT NULL,
-  lesson_id           SMALLINT UNSIGNED NOT NULL,
-  predicted_vowel_id  TINYINT UNSIGNED DEFAULT NULL,
-  confidence          FLOAT NOT NULL DEFAULT 0.0,
-  is_passed           BOOLEAN NOT NULL DEFAULT FALSE,
-  duration_seconds    TINYINT UNSIGNED DEFAULT NULL,
-  practiced_at        DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (firebase_uid)       REFERENCES users(firebase_uid) ON DELETE CASCADE,
-  FOREIGN KEY (lesson_id)          REFERENCES vowel_lessons(id),
-  FOREIGN KEY (predicted_vowel_id) REFERENCES vowels(id)
+  id               INT AUTO_INCREMENT PRIMARY KEY,
+  firebase_uid     VARCHAR(128) NOT NULL,
+  lesson_id        INT NOT NULL,
+  confidence       FLOAT NOT NULL,
+  assessment_level VARCHAR(20) DEFAULT NULL,
+  is_passed        TINYINT(1) NOT NULL,
+  duration_seconds INT DEFAULT 0,
+  practiced_at     DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (lesson_id) REFERENCES vowel_lessons(id)
 );
 ```
 
@@ -334,7 +460,7 @@ CREATE TABLE practice_sessions (
 **บันทึก session ใหม่ (หลัง Flask ส่งผลกลับมา)**
 ```sql
 INSERT INTO practice_sessions
-  (firebase_uid, lesson_id, predicted_vowel_id, confidence, is_passed, duration_seconds)
+  (firebase_uid, lesson_id, confidence, assessment_level, is_passed, duration_seconds)
 VALUES
   (?, ?, ?, ?, ?, ?);
 ```

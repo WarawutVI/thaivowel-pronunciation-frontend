@@ -1,6 +1,27 @@
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:frontend/services/class/daily_trend.dart';
+import 'package:frontend/services/class/lesson_progress.dart';
+import 'package:frontend/services/class/predict_result.dart';
+import 'package:frontend/services/class/progress_summary.dart';
+import 'package:frontend/services/class/session_record.dart';
+import 'package:frontend/services/class/user_streak.dart';
+import 'package:frontend/services/class/vowel_detail.dart';
+import 'package:frontend/services/class/vowel_formant.dart';
+import 'package:frontend/services/class/vowel_progress.dart';
+import 'package:frontend/services/class/vowel_stats.dart';
 import 'package:http/http.dart' as http;
+
+export 'package:frontend/services/class/daily_trend.dart';
+export 'package:frontend/services/class/lesson_progress.dart';
+export 'package:frontend/services/class/predict_result.dart';
+export 'package:frontend/services/class/progress_summary.dart';
+export 'package:frontend/services/class/session_record.dart';
+export 'package:frontend/services/class/user_streak.dart';
+export 'package:frontend/services/class/vowel_detail.dart';
+export 'package:frontend/services/class/vowel_formant.dart';
+export 'package:frontend/services/class/vowel_progress.dart';
+export 'package:frontend/services/class/vowel_stats.dart';
 
 const String _base = 'https://perkiness-shadiness-extras.ngrok-free.dev';
 const String _flaskBase = 'https://perkiness-shadiness-extras.ngrok-free.dev/model';
@@ -13,244 +34,6 @@ const Map<String, String> _jsonHeaders = {
   'Content-Type': 'application/json',
   'ngrok-skip-browser-warning': 'true',
 };
-
-class VowelDetail {
-  final int id;
-  final String symbol;
-  final String vowelType;
-  final String? unicodePhonetic;
-  final String? descriptionEn;
-  final String? descriptionTh;
-  final String? lipsEn;
-  final String? lipsTh;
-  final String? tongueEn;
-  final String? tongueTh;
-  final String? jawEn;
-  final String? jawTh;
-  final String? linkVideo;
-
-  const VowelDetail({
-    required this.id,
-    required this.symbol,
-    required this.vowelType,
-    this.unicodePhonetic,
-    this.descriptionEn,
-    this.descriptionTh,
-    this.lipsEn,
-    this.lipsTh,
-    this.tongueEn,
-    this.tongueTh,
-    this.jawEn,
-    this.jawTh,
-    this.linkVideo,
-  });
-
-  factory VowelDetail.fromJson(Map<String, dynamic> j) => VowelDetail(
-        id: j['id'] as int,
-        symbol: j['symbol'] as String,
-        vowelType: j['vowel_type'] as String,
-        unicodePhonetic: j['unicode_phonetic'] as String?,
-        descriptionEn: j['description_en'] as String?,
-        descriptionTh: j['description_th'] as String?,
-        lipsEn: j['lips_en'] as String?,
-        lipsTh: j['lips_th'] as String?,
-        tongueEn: j['tongue_en'] as String?,
-        tongueTh: j['tongue_th'] as String?,
-        jawEn: j['jaw_en'] as String?,
-        jawTh: j['jaw_th'] as String?,
-        linkVideo: j['link_video'] as String?,
-      );
-}
-
-class VowelProgress {
-  final int vowelId;
-  final String symbol;
-  final String vowelType;
-  final int completed;
-  final int total;
-
-  const VowelProgress({
-    required this.vowelId,
-    required this.symbol,
-    required this.vowelType,
-    required this.completed,
-    required this.total,
-  });
-
-  factory VowelProgress.fromJson(Map<String, dynamic> j) => VowelProgress(
-        vowelId: j['vowel_id'] as int,
-        symbol: j['symbol'] as String,
-        vowelType: j['vowel_type'] as String,
-        completed: (j['completed'] ?? 0) as int,
-        total: (j['total'] ?? 9) as int,
-      );
-}
-
-class LessonProgress {
-  final int lessonId;
-  final int lessonOrder;
-  final String lessonName;
-  final bool? isCompleted;
-  final double bestAccuracy;
-  final int attempts;
-
-  const LessonProgress({
-    required this.lessonId,
-    required this.lessonOrder,
-    required this.lessonName,
-    required this.isCompleted,
-    required this.bestAccuracy,
-    required this.attempts,
-  });
-
-  factory LessonProgress.fromJson(Map<String, dynamic> j) => LessonProgress(
-        lessonId: j['lesson_id'] as int,
-        lessonOrder: j['lesson_order'] as int,
-        lessonName: j['lesson_name'] as String,
-        isCompleted: j['is_completed'] == null ? null : (j['is_completed'] as int) == 1,
-        bestAccuracy: (j['best_accuracy'] ?? 0.0).toDouble(),
-        attempts: (j['attempts'] ?? 0) as int,
-      );
-}
-
-class VowelFormant {
-  final double f1;
-  final double f2;
-
-  const VowelFormant({required this.f1, required this.f2});
-
-  factory VowelFormant.fromJson(Map<String, dynamic> j) => VowelFormant(
-        f1: (j['f1'] as num).toDouble(),
-        f2: (j['f2'] as num).toDouble(),
-      );
-}
-
-class PredictResult {
-  final double confidence;
-  final bool isPassed;
-  final double userF1;
-  final double userF2;
-
-  const PredictResult({
-    required this.confidence,
-    required this.isPassed,
-    required this.userF1,
-    required this.userF2,
-  });
-
-  factory PredictResult.fromJson(Map<String, dynamic> j) {
-    final conf = (j['confidence'] as num? ?? 0.0).toDouble();
-    final formants = j['user_formants'] as Map<String, dynamic>? ?? {};
-    return PredictResult(
-      confidence: conf,
-      isPassed: conf >= 0.70,
-      userF1: (formants['F1'] as num? ?? 0.0).toDouble(),
-      userF2: (formants['F2'] as num? ?? 0.0).toDouble(),
-    );
-  }
-}
-
-class UserStreak {
-  final int currentStreak;
-  final int longestStreak;
-  final String? lastPracticeDate;
-
-  const UserStreak({
-    required this.currentStreak,
-    required this.longestStreak,
-    this.lastPracticeDate,
-  });
-
-  factory UserStreak.fromJson(Map<String, dynamic> j) => UserStreak(
-        currentStreak: (j['current_streak'] ?? 0) as int,
-        longestStreak: (j['longest_streak'] ?? 0) as int,
-        lastPracticeDate: j['last_practice_date'] as String?,
-      );
-}
-
-class ProgressSummary {
-  final double overallAccuracy;
-  final int totalSessions;
-  final double bestAccuracy;
-  final double longAvgAccuracy;
-  final double shortAvgAccuracy;
-
-  const ProgressSummary({
-    required this.overallAccuracy,
-    required this.totalSessions,
-    required this.bestAccuracy,
-    required this.longAvgAccuracy,
-    required this.shortAvgAccuracy,
-  });
-
-  factory ProgressSummary.fromJson(Map<String, dynamic> j) => ProgressSummary(
-        overallAccuracy: (j['overall_accuracy'] ?? 0.0).toDouble(),
-        totalSessions: (j['total_sessions'] ?? 0) as int,
-        bestAccuracy: (j['best_accuracy'] ?? 0.0).toDouble(),
-        longAvgAccuracy: (j['long_avg_accuracy'] ?? 0.0).toDouble(),
-        shortAvgAccuracy: (j['short_avg_accuracy'] ?? 0.0).toDouble(),
-      );
-}
-
-class VowelStats {
-  final int vowelId;
-  final String symbol;
-  final String vowelType;
-  final int practiceCount;
-  final double avgAccuracy;
-
-  const VowelStats({
-    required this.vowelId,
-    required this.symbol,
-    required this.vowelType,
-    required this.practiceCount,
-    required this.avgAccuracy,
-  });
-
-  factory VowelStats.fromJson(Map<String, dynamic> j) => VowelStats(
-        vowelId: j['vowel_id'] as int,
-        symbol: j['symbol'] as String,
-        vowelType: j['vowel_type'] as String,
-        practiceCount: (j['practice_count'] ?? 0) as int,
-        avgAccuracy: (j['avg_accuracy'] ?? 0.0).toDouble(),
-      );
-}
-
-class SessionRecord {
-  final String symbol;
-  final String vowelType;
-  final String lessonName;
-  final double confidence;
-  final DateTime practicedAt;
-
-  const SessionRecord({
-    required this.symbol,
-    required this.vowelType,
-    required this.lessonName,
-    required this.confidence,
-    required this.practicedAt,
-  });
-
-  factory SessionRecord.fromJson(Map<String, dynamic> j) => SessionRecord(
-        symbol: j['symbol'] as String,
-        vowelType: j['vowel_type'] as String,
-        lessonName: j['lesson_name'] as String,
-        confidence: (j['confidence'] ?? 0.0).toDouble(),
-        practicedAt: DateTime.parse(j['practiced_at'] as String),
-      );
-}
-
-class DailyTrend {
-  final DateTime date;
-  final double avgAccuracy;
-
-  const DailyTrend({required this.date, required this.avgAccuracy});
-
-  factory DailyTrend.fromJson(Map<String, dynamic> j) => DailyTrend(
-        date: DateTime.parse(j['date'] as String),
-        avgAccuracy: (j['avg_accuracy'] ?? 0.0).toDouble(),
-      );
-}
 
 class PracticeApi {
   // POST /users
@@ -306,9 +89,9 @@ class PracticeApi {
     return data.map((e) => LessonProgress.fromJson(e as Map<String, dynamic>)).toList();
   }
 
-  // POST Flask /predict2
+  // POST Flask /predict3
   static Future<PredictResult> predict(Uint8List audioBytes, int vowelIndex) async {
-    final req = http.MultipartRequest('POST', Uri.parse('$_flaskBase/predict2'));
+    final req = http.MultipartRequest('POST', Uri.parse('$_flaskBase/predict3'));
     req.headers.addAll(_headers);
     req.fields['index'] = vowelIndex.toString();
     req.files.add(http.MultipartFile.fromBytes(
@@ -327,6 +110,7 @@ class PracticeApi {
     required String firebaseUid,
     required int lessonId,
     required double confidence,
+    required String assessmentLevel,
     required bool isPassed,
     required int durationSeconds,
   }) async {
@@ -337,6 +121,7 @@ class PracticeApi {
         'firebase_uid': firebaseUid,
         'lesson_id': lessonId,
         'confidence': confidence,
+        'assessment_level': assessmentLevel,
         'is_passed': isPassed,
         'duration_seconds': durationSeconds,
       }),
@@ -349,6 +134,7 @@ class PracticeApi {
     required int lessonId,
     required bool isCompleted,
     required double bestAccuracy,
+    required String assessmentLevel,
   }) async {
     await http.post(
       Uri.parse('$_base/user_lesson_progress'),
@@ -358,6 +144,7 @@ class PracticeApi {
         'lesson_id': lessonId,
         'is_completed': isCompleted,
         'best_accuracy': bestAccuracy,
+        'assessment_level': assessmentLevel,
       }),
     );
   }
