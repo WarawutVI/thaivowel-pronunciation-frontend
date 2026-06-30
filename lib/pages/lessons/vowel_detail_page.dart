@@ -72,19 +72,7 @@ class _VowelDetailPageState extends State<VowelDetailPage> {
     final vowel = widget.vowel;
     final isLong = vowel.vowelType == 'long';
 
-    // ✨ ใช้ YoutubePlayerBuilder ครอบเพื่อรองรับฟังก์ชันการกดขยายเต็มจอ (Fullscreen) ได้สมบูรณ์
-    return YoutubePlayerBuilder(
-      player: YoutubePlayer(
-        controller: _ytController!,
-        showVideoProgressIndicator: true,
-        progressIndicatorColor: const Color(0xFF1A7A50),
-        progressColors: const ProgressBarColors(
-          playedColor: Color(0xFF1A7A50),
-          handleColor: Color(0xFF1A7A50),
-        ),
-      ),
-      builder: (context, player) {
-        return Scaffold(
+    Scaffold buildScaffold(Widget? player) => Scaffold(
           backgroundColor: const Color(0xFFF4FAF7),
           appBar: AppBar(
             backgroundColor: Colors.white,
@@ -292,8 +280,20 @@ class _VowelDetailPageState extends State<VowelDetailPage> {
         ],
       ),
     );
-  },
-);
+
+    if (_ytController == null) return buildScaffold(null);
+    return YoutubePlayerBuilder(
+      player: YoutubePlayer(
+        controller: _ytController!,
+        showVideoProgressIndicator: true,
+        progressIndicatorColor: const Color(0xFF1A7A50),
+        progressColors: const ProgressBarColors(
+          playedColor: Color(0xFF1A7A50),
+          handleColor: Color(0xFF1A7A50),
+        ),
+      ),
+      builder: (_, player) => buildScaffold(player),
+    );
   }
 }
 

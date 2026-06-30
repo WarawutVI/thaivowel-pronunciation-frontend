@@ -13,6 +13,8 @@ import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 
+enum _Phase { idle, getReady, recording, analyzing }
+
 class RecordingPage extends StatefulWidget {
   final int lessonId;
   final int lessonOrder;
@@ -37,13 +39,14 @@ class RecordingPage extends StatefulWidget {
 
 class _RecordingPageState extends State<RecordingPage> {
   static const int _recordSeconds = 3;
+  static const int _getReadySeconds = 3;
 
   late bool isEnglish;
   final AudioRecorder _recorder = AudioRecorder();
 
-  bool _isRecording = false;
+  _Phase _phase = _Phase.idle;
+  int _readyCountdown = _getReadySeconds;
   int _remainingSeconds = _recordSeconds;
-  String _statusText = '';
   Timer? _countdownTimer;
 
   List<double> _refSamples = [];
@@ -56,17 +59,12 @@ class _RecordingPageState extends State<RecordingPage> {
   String get firebaseUid => FirebaseAuth.instance.currentUser!.uid;
   String t(String en, String th) => isEnglish ? en : th;
 
-  // vowelId is 1-based in DB; model index is 0-based
   int get _vowelIndex => widget.vowelId - 1;
 
   @override
   void initState() {
     super.initState();
     isEnglish = Get.find<LanguageController>().isEnglish;
-    _statusText = t(
-      'Press the mic and speak for $_recordSeconds seconds.',
-      'กดไมค์แล้วพูด $_recordSeconds วินาที',
-    );
   }
 
   @override
@@ -84,7 +82,7 @@ class _RecordingPageState extends State<RecordingPage> {
     return File(path).readAsBytes();
   }
 
-  Future<void> _startRecording() async {
+  Future<void> _beginFlow() async {
     final hasPermission = await _recorder.hasPermission();
     if (!hasPermission) {
       Get.snackbar(
@@ -96,6 +94,23 @@ class _RecordingPageState extends State<RecordingPage> {
       return;
     }
 
+    setState(() {
+      _phase = _Phase.getReady;
+      _readyCountdown = _getReadySeconds;
+    });
+
+    _countdownTimer?.cancel();
+    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) async {
+      if (_readyCountdown <= 1) {
+        timer.cancel();
+        await _startRecording();
+      } else {
+        setState(() => _readyCountdown--);
+      }
+    });
+  }
+
+  Future<void> _startRecording() async {
     final String path;
     if (kIsWeb) {
       path = 'vowel_recording.wav';
@@ -114,10 +129,8 @@ class _RecordingPageState extends State<RecordingPage> {
     );
 
     setState(() {
-      _isRecording = true;
+      _phase = _Phase.recording;
       _remainingSeconds = _recordSeconds;
-      _statusText = t('Recording... $_remainingSeconds s',
-          'กำลังบันทึก... $_remainingSeconds วินาที');
       _refSamples = [];
       _userSamples = [];
     });
@@ -127,17 +140,10 @@ class _RecordingPageState extends State<RecordingPage> {
       if (_remainingSeconds <= 1) {
         timer.cancel();
         final finalPath = await _recorder.stop();
-        setState(() {
-          _isRecording = false;
-          _statusText = t('Analysing...', 'กำลังวิเคราะห์...');
-        });
+        setState(() => _phase = _Phase.analyzing);
         if (finalPath != null) await _submitToApi(finalPath);
       } else {
-        setState(() {
-          _remainingSeconds--;
-          _statusText = t('Recording... $_remainingSeconds s',
-              'กำลังบันทึก... $_remainingSeconds วินาที');
-        });
+        setState(() => _remainingSeconds--);
       }
     });
   }
@@ -147,17 +153,14 @@ class _RecordingPageState extends State<RecordingPage> {
     try {
       final audioBytes = await _getAudioBytes(filePath);
 
-      // predict3 returns confidence, assessment, formants, ref_wave, user_wave
       final result = await PracticeApi.predict(audioBytes, _vowelIndex);
       final duration = DateTime.now().difference(recordStart).inSeconds;
 
-      // Fetch reference formants for suggestion (non-blocking)
       VowelFormant? refFormant;
       try {
         refFormant = await PracticeApi.fetchVowelFormant(widget.vowelId);
       } catch (_) {}
 
-      // Save to backend (fire-and-forget)
       PracticeApi.saveSession(
         firebaseUid: firebaseUid,
         lessonId: widget.lessonId,
@@ -176,21 +179,24 @@ class _RecordingPageState extends State<RecordingPage> {
       PracticeApi.updateStreak(firebaseUid);
 
       setState(() {
-        _confidence   = result.confidence;
-        _userF1       = result.userF1;
-        _userF2       = result.userF2;
-        _refFormant   = refFormant;
-        _refSamples   = result.refWave;   // DTW-aligned ref from backend
-        _userSamples  = result.userWave;  // DTW-aligned user from backend
-        _statusText   = t(
-          'Score: ${(_confidence * 100).toStringAsFixed(1)}%',
-          'คะแนน: ${(_confidence * 100).toStringAsFixed(1)}%',
-        );
+        _confidence  = result.confidence;
+        _userF1      = result.userF1;
+        _userF2      = result.userF2;
+        _refFormant  = refFormant;
+        _refSamples  = result.refWave;
+        _userSamples = result.userWave;
+        _phase       = _Phase.idle;
       });
 
       _showResultModal();
     } catch (e) {
-      setState(() => _statusText = t('Error: $e', 'เกิดข้อผิดพลาด: $e'));
+      setState(() => _phase = _Phase.idle);
+      Get.snackbar(
+        t('Error', 'เกิดข้อผิดพลาด'),
+        e.toString(),
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
     }
   }
 
@@ -200,7 +206,7 @@ class _RecordingPageState extends State<RecordingPage> {
 
     final f1Diff = _userF1 - ref.f1;
     final f2Diff = _userF2 - ref.f2;
-    const f1Threshold = 100.0; // Hz margin
+    const f1Threshold = 100.0;
     const f2Threshold = 200.0;
 
     final List<String> partsEn = [];
@@ -246,7 +252,6 @@ class _RecordingPageState extends State<RecordingPage> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Title
                   Center(
                     child: Text(
                       passed ? '$level 🎉' : level,
@@ -258,8 +263,6 @@ class _RecordingPageState extends State<RecordingPage> {
                     ),
                   ),
                   const SizedBox(height: 16),
-
-                  // Waveform (DTW-aligned from backend)
                   WaveformDisplay(
                     refSamples: _refSamples,
                     userSamples: _userSamples,
@@ -267,8 +270,6 @@ class _RecordingPageState extends State<RecordingPage> {
                     userLabel: t('Your Audio', 'เสียงของคุณ'),
                   ),
                   const SizedBox(height: 14),
-
-                  // Accuracy
                   Center(
                     child: Text(
                       t(
@@ -282,8 +283,6 @@ class _RecordingPageState extends State<RecordingPage> {
                       ),
                     ),
                   ),
-
-                  // Suggestion — only shown when not passed
                   if (suggestion.isNotEmpty && !passed) ...[
                     const SizedBox(height: 14),
                     RichText(
@@ -309,8 +308,6 @@ class _RecordingPageState extends State<RecordingPage> {
                     ),
                   ],
                   const SizedBox(height: 20),
-
-                  // Buttons
                   Row(
                     children: [
                       Expanded(
@@ -364,6 +361,174 @@ class _RecordingPageState extends State<RecordingPage> {
     );
   }
 
+  // ── Phase-specific views ──────────────────────────────────────────────────────
+
+  Widget _buildIdleView() {
+    return Column(
+      key: const ValueKey(_Phase.idle),
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          widget.word,
+          style: const TextStyle(
+            fontSize: 170,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
+          ),
+        ),
+        const SizedBox(height: 16),
+        Text(
+          t(
+            'Press the mic and speak for $_recordSeconds seconds.',
+            'กดไมค์แล้วพูด $_recordSeconds วินาที',
+          ),
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontSize: 15, color: Colors.black54),
+        ),
+        const SizedBox(height: 40),
+        GestureDetector(
+          onTap: _beginFlow,
+          child: Container(
+            padding: const EdgeInsets.all(28),
+            decoration: BoxDecoration(
+              color: const Color(0xFF1A7A50),
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF1A7A50).withValues(alpha: 0.4),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: const Icon(Icons.mic, size: 50, color: Colors.white),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildGetReadyView() {
+    return Column(
+      key: const ValueKey(_Phase.getReady),
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          t('Get Ready!', 'เตรียมตัว!'),
+          style: const TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
+          ),
+        ),
+        const SizedBox(height: 32),
+        SizedBox(
+          width: 140,
+          height: 140,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              SizedBox(
+                width: 140,
+                height: 140,
+                child: CircularProgressIndicator(
+                  value: _readyCountdown / _getReadySeconds,
+                  strokeWidth: 8,
+                  backgroundColor: Colors.black12,
+                  valueColor:
+                      const AlwaysStoppedAnimation<Color>(Color(0xFF1A7A50)),
+                ),
+              ),
+              Text(
+                '$_readyCountdown',
+                style: const TextStyle(
+                  fontSize: 60,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 32),
+        Text(
+          '${t('Say:', 'พูด:')} ${widget.word}',
+          style: const TextStyle(fontSize: 22, color: Colors.black54),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRecordingView() {
+    return Column(
+      key: const ValueKey(_Phase.recording),
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          t('SPEAK', 'พูดได้เลย'),
+          style: const TextStyle(
+            fontSize: 36,
+            fontWeight: FontWeight.bold,
+            color: Colors.red,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Text(
+          widget.word,
+          style: const TextStyle(
+            fontSize: 130,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
+          ),
+        ),
+        const SizedBox(height: 20),
+        SizedBox(
+          width: 110,
+          height: 110,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              SizedBox(
+                width: 110,
+                height: 110,
+                child: CircularProgressIndicator(
+                  value: _remainingSeconds / _recordSeconds,
+                  strokeWidth: 8,
+                  backgroundColor: Colors.black12,
+                  valueColor:
+                      const AlwaysStoppedAnimation<Color>(Colors.red),
+                ),
+              ),
+              Text(
+                '$_remainingSeconds',
+                style: const TextStyle(
+                  fontSize: 46,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.red,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAnalyzingView() {
+    return Column(
+      key: const ValueKey(_Phase.analyzing),
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const CircularProgressIndicator(color: Color(0xFF1A7A50)),
+        const SizedBox(height: 24),
+        Text(
+          t('Analysing...', 'กำลังวิเคราะห์...'),
+          style: const TextStyle(fontSize: 18, color: Colors.black54),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -384,52 +549,14 @@ class _RecordingPageState extends State<RecordingPage> {
       body: Center(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                widget.word,
-                style: const TextStyle(
-                  fontSize: 170,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                _statusText,
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 15, color: Colors.black54),
-              ),
-              const SizedBox(height: 40),
-              GestureDetector(
-                onTap: _isRecording ? null : _startRecording,
-                child: Container(
-                  padding: const EdgeInsets.all(28),
-                  decoration: BoxDecoration(
-                    color: _isRecording
-                        ? Colors.red
-                        : const Color(0xFF1A7A50),
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: (_isRecording
-                                ? Colors.red
-                                : const Color(0xFF1A7A50))
-                            .withValues(alpha: 0.4),
-                        blurRadius: 20,
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
-                  ),
-                  child: Icon(
-                    _isRecording ? Icons.stop_rounded : Icons.mic,
-                    size: 50,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ],
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 300),
+            child: switch (_phase) {
+              _Phase.idle      => _buildIdleView(),
+              _Phase.getReady  => _buildGetReadyView(),
+              _Phase.recording => _buildRecordingView(),
+              _Phase.analyzing => _buildAnalyzingView(),
+            },
           ),
         ),
       ),

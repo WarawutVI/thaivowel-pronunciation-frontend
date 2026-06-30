@@ -31,7 +31,14 @@ class _LoginState extends State<Login> {
 
   String t(String en, String th) => isEnglish ? en : th;
 
-  loginwithform() async {
+  @override
+  void dispose() {
+    email.dispose();
+    password.dispose();
+    super.dispose();
+  }
+
+  Future<void> loginwithform() async {
     if (email.text.trim().isEmpty || password.text.isEmpty) {
       Get.snackbar(
         t("Notice", "แจ้งเตือน"),
@@ -59,8 +66,8 @@ class _LoginState extends State<Login> {
       String message = t("An error occurred", "เกิดข้อผิดพลาด");
       if (e.code == 'user-not-found') {
         message = t("Email not found", "ไม่พบอีเมลนี้ในระบบ");
-      } else if (e.code == 'wrong-password') {
-        message = t("Incorrect password", "รหัสผ่านไม่ถูกต้อง");
+      } else if (e.code == 'wrong-password' || e.code == 'invalid-credential') {
+        message = t("Incorrect email or password", "อีเมลหรือรหัสผ่านไม่ถูกต้อง");
       } else if (e.code == 'invalid-email') {
         message = t("Invalid email format", "รูปแบบอีเมลไม่ถูกต้อง");
       }
@@ -75,7 +82,7 @@ class _LoginState extends State<Login> {
     }
   }
 
-  loginwithgoogle() async {
+  Future<void> loginwithgoogle() async {
     try {
       Get.dialog(
         const Center(child: CircularProgressIndicator()),
