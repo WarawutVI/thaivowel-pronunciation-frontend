@@ -66,6 +66,7 @@ class _WordGridPageState extends State<WordGridPage> {
           lessonOrder: l.lessonOrder,
           vowelId: widget.vowelId,
           word: l.lessonName,
+          wordIpa: l.unicodePhonetic,
           vowelSymbol: widget.vowelSymbol,
           isEnglish: isEnglish,
         ));

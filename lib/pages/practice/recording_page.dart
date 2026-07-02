@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
@@ -20,6 +21,7 @@ class RecordingPage extends StatefulWidget {
   final int lessonOrder;
   final int vowelId;
   final String word;
+  final String? wordIpa;
   final String vowelSymbol;
   final bool isEnglish;
 
@@ -29,6 +31,7 @@ class RecordingPage extends StatefulWidget {
     required this.lessonOrder,
     required this.vowelId,
     required this.word,
+    this.wordIpa,
     required this.vowelSymbol,
     this.isEnglish = true,
   });
@@ -43,11 +46,13 @@ class _RecordingPageState extends State<RecordingPage> {
 
   late bool isEnglish;
   final AudioRecorder _recorder = AudioRecorder();
+  final AudioPlayer _samplePlayer = AudioPlayer();
 
   _Phase _phase = _Phase.idle;
   int _readyCountdown = _getReadySeconds;
   int _remainingSeconds = _recordSeconds;
   Timer? _countdownTimer;
+  bool _isPlayingSample = false;
 
   List<double> _refSamples = [];
   List<double> _userSamples = [];
@@ -65,13 +70,39 @@ class _RecordingPageState extends State<RecordingPage> {
   void initState() {
     super.initState();
     isEnglish = Get.find<LanguageController>().isEnglish;
+    _samplePlayer.onPlayerComplete.listen((_) {
+      if (mounted) setState(() => _isPlayingSample = false);
+    });
   }
 
   @override
   void dispose() {
     _countdownTimer?.cancel();
     _recorder.dispose();
+    _samplePlayer.dispose();
     super.dispose();
+  }
+
+  Future<void> _toggleSample() async {
+    if (_isPlayingSample) {
+      await _samplePlayer.stop();
+      setState(() => _isPlayingSample = false);
+      return;
+    }
+    try {
+      setState(() => _isPlayingSample = true);
+      await _samplePlayer.play(
+        AssetSource('samples/${widget.vowelId}/${widget.lessonOrder}.wav'),
+      );
+    } catch (_) {
+      setState(() => _isPlayingSample = false);
+      Get.snackbar(
+        t('Error', 'เกิดข้อผิดพลาด'),
+        t('Sample audio not available', 'ไม่มีเสียงตัวอย่าง'),
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
   }
 
   Future<Uint8List> _getAudioBytes(String path) async {
@@ -273,8 +304,8 @@ class _RecordingPageState extends State<RecordingPage> {
                   Center(
                     child: Text(
                       t(
-                        'accuracy ${(_confidence * 100).toStringAsFixed(0)}%',
-                        'ความแม่นยำ ${(_confidence * 100).toStringAsFixed(0)}%',
+                        'similarity ${(_confidence * 100).toStringAsFixed(0)}%',
+                        'ความคล้ายคลึงกัน ${(_confidence * 100).toStringAsFixed(0)}%',
                       ),
                       style: const TextStyle(
                         fontSize: 18,
@@ -371,11 +402,16 @@ class _RecordingPageState extends State<RecordingPage> {
         Text(
           widget.word,
           style: const TextStyle(
-            fontSize: 170,
+            fontSize: 150,
             fontWeight: FontWeight.bold,
             color: Colors.black87,
           ),
         ),
+        if (widget.wordIpa != null)
+          Text(
+            widget.wordIpa!,
+            style: const TextStyle(fontSize: 20, color: Colors.black45),
+          ),
         const SizedBox(height: 16),
         Text(
           t(
@@ -455,6 +491,11 @@ class _RecordingPageState extends State<RecordingPage> {
           '${t('Say:', 'พูด:')} ${widget.word}',
           style: const TextStyle(fontSize: 22, color: Colors.black54),
         ),
+        if (widget.wordIpa != null)
+          Text(
+            widget.wordIpa!,
+            style: const TextStyle(fontSize: 16, color: Colors.black45),
+          ),
       ],
     );
   }
@@ -481,6 +522,11 @@ class _RecordingPageState extends State<RecordingPage> {
             color: Colors.black87,
           ),
         ),
+        if (widget.wordIpa != null)
+          Text(
+            widget.wordIpa!,
+            style: const TextStyle(fontSize: 18, color: Colors.black45),
+          ),
         const SizedBox(height: 20),
         SizedBox(
           width: 110,
@@ -545,6 +591,16 @@ class _RecordingPageState extends State<RecordingPage> {
           style: const TextStyle(
               color: Colors.black87, fontWeight: FontWeight.bold),
         ),
+        actions: [
+          if (_phase == _Phase.idle)
+            IconButton(
+              onPressed: _toggleSample,
+              icon: Icon(
+                _isPlayingSample ? Icons.stop : Icons.volume_up,
+                color: const Color(0xFF1A7A50),
+              ),
+            ),
+        ],
       ),
       body: Center(
         child: Padding(
