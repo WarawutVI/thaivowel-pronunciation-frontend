@@ -23,6 +23,19 @@ class _HomepageState extends State<Homepage> {
   String get _uid => FirebaseAuth.instance.currentUser!.uid;
   String t(String en, String th) => isEnglish ? en : th;
 
+  String get _userName {
+    final user = FirebaseAuth.instance.currentUser;
+    final displayName = user?.displayName?.trim();
+    if (displayName != null && displayName.isNotEmpty) {
+      return displayName.split(' ')[0];
+    }
+    final email = user?.email;
+    if (email != null && email.contains('@')) {
+      return email.split('@')[0];
+    }
+    return t('there', 'เพื่อน');
+  }
+
   @override
   void initState() {
     super.initState();
@@ -72,14 +85,23 @@ class _HomepageState extends State<Homepage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    t('Daily streak', 'วันที่ฝึกต่อเนื่อง'),
-                    style: const TextStyle(color: Colors.white70, fontSize: 11),
-                  ),
-                  Text(
-                    t('$_currentStreak days strong', 'แข็งแกร่ง $_currentStreak วัน'),
+                    t('Hi, $_userName 👋', 'สวัสดี, $_userName 👋'),
                     style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 16,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    t('Daily streak', 'วันที่ฝึกต่อเนื่อง'),
+                    style: const TextStyle(color: Colors.white70, fontSize: 15),
+                  ),
+                  Text(
+                    t('$_currentStreak days ', ' $_currentStreak วัน'),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 40,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -248,11 +270,11 @@ class _HomepageState extends State<Homepage> {
                 ),
               ),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 3),
             Center(
               child: Image.asset(
                 'assets/picture/iconpracticepage.png',
-                height: 100,
+                height: 180,
               ),
             ),
           ],

@@ -34,7 +34,16 @@ class _SignupState extends State<Signup> {
 
   String t(String en, String th) => isEnglish ? en : th;
 
-  signup_google() async {
+  @override
+  void dispose() {
+    username.dispose();
+    email.dispose();
+    password.dispose();
+    confirmPassword.dispose();
+    super.dispose();
+  }
+
+  Future<void> signup_google() async {
     try {
       Get.dialog(
         const Center(child: CircularProgressIndicator()),
@@ -137,7 +146,7 @@ class _SignupState extends State<Signup> {
     }
   }
 
-  signup_email() async {
+  Future<void> signup_email() async {
     if (username.text.trim().isEmpty ||
         email.text.trim().isEmpty ||
         password.text.isEmpty ||

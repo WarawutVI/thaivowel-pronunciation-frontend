@@ -21,9 +21,6 @@ class _PracticepageState extends State<Practicepage> {
 
   String t(String en, String th) => isEnglish ? en : th;
 
-  @override
- 
-
   Widget _buildCategoryCard({
     required String title,
     required String subtitle,
@@ -117,14 +114,7 @@ class _PracticepageState extends State<Practicepage> {
             ),
           ),
           const SizedBox(height: 16),
-          _buildCategoryCard(
-            title: t('Short Vowel', 'สระเสียงสั้น'),
-            subtitle: t('9 quick, snappy sounds', '9 เสียงสั้นกระชับ'),
-            imagePath: 'assets/picture/shortvowel.png',
-            color: const Color(0xFFE05C6A),
-            cardColor: const Color(0xFFFFB3BA),
-            onTap: () => Get.to(() => const VowelGridPage(type: 'short')),
-          ),
+
           _buildCategoryCard(
             title: t('Long Vowel', 'สระเสียงยาว'),
             subtitle: t('9 stretched, resonant sounds', '9 เสียงยาวก้องกังวาน'),
@@ -132,6 +122,14 @@ class _PracticepageState extends State<Practicepage> {
             color: const Color(0xFF4A90D9),
             cardColor: const Color(0xFFB3D9FF),
             onTap: () => Get.to(() => const VowelGridPage(type: 'long')),
+          ),
+            _buildCategoryCard(
+            title: t('Short Vowel', 'สระเสียงสั้น'),
+            subtitle: t('9 quick, snappy sounds', '9 เสียงสั้นกระชับ'),
+            imagePath: 'assets/picture/shortvowel.png',
+            color: const Color(0xFFE05C6A),
+            cardColor: const Color(0xFFFFB3BA),
+            onTap: () => Get.to(() => const VowelGridPage(type: 'short')),
           ),
         ],
       ),

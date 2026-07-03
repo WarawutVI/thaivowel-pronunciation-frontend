@@ -192,7 +192,7 @@ class _ProgreespageState extends State<Progreespage> {
 
   // ── Error state ──────────────────────────────────────────────────────────────
 
-  Widget _buildError(String _) => Center(
+  Widget _buildError(String message) => Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -200,8 +200,9 @@ class _ProgreespageState extends State<Progreespage> {
                 color: Colors.redAccent, size: 40),
             const SizedBox(height: 12),
             Text(
-              t('Failed to load data', 'โหลดข้อมูลไม่สำเร็จ'),
+              message,
               style: const TextStyle(color: Colors.black54),
+              textAlign: TextAlign.center,
             ),
             const SizedBox(height: 12),
             ElevatedButton(
