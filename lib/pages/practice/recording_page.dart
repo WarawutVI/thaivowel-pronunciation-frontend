@@ -246,7 +246,7 @@ class _RecordingPageState extends State<RecordingPage> {
     if (f1Diff > f1Threshold) {
       partsEn.addAll(['closing your mouth slightly', 'raising your tongue']);
       partsTh.addAll(['ปิดปากลงเล็กน้อย', 'ยกลิ้นขึ้น']);
-    } else if (f1Diff < -f1Threshold) {
+    } else if (f1Diff < f1Threshold) {
       partsEn.addAll(['opening your mouth wider', 'lowering your tongue']);
       partsTh.addAll(['อ้าปากให้กว้างขึ้น', 'วางลิ้นให้ต่ำลง']);
     }
@@ -254,7 +254,7 @@ class _RecordingPageState extends State<RecordingPage> {
     if (f2Diff > f2Threshold) {
       partsEn.add('moving your tongue slightly back');
       partsTh.add('เลื่อนลิ้นไปด้านหลังเล็กน้อย');
-    } else if (f2Diff < -f2Threshold) {
+    } else if (f2Diff < f2Threshold) {
       partsEn.addAll(['moving your tongue slightly forward', 'relaxing your lips']);
       partsTh.addAll(['เลื่อนลิ้นไปด้านหน้าเล็กน้อย', 'ผ่อนคลายริมฝีปาก']);
     }

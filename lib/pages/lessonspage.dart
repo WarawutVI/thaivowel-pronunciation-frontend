@@ -83,6 +83,22 @@ class _LessonspageState extends State<Lessonspage> {
                     children: [
                       _NewHereBanner(isEnglish: isEnglish),
                       const SizedBox(height: 24),
+                      _TongueSection(isEnglish: isEnglish),
+                      const SizedBox(height: 24),
+                      _TongueHeightSection(isEnglish: isEnglish),
+                      const SizedBox(height: 16),
+                      Text(
+                        t(
+                          'Want to know how to pronounce a vowel? Tap on it.',
+                          'หากต้องการทราบวิธีออกเสียงสระ ให้กดที่สระนั้น',
+                        ),
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontStyle: FontStyle.italic,
+                          color: Colors.black45,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
                       _VowelSection(
                         title: t('Long Vowels', 'สระเสียงยาว'),
                         vowels: longVowels,
@@ -119,28 +135,182 @@ class _NewHereBanner extends StatelessWidget {
         children: [
           const Icon(Icons.menu_book_rounded, color: Color(0xFF1A7A50), size: 28),
           const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                isEnglish ? 'New here?' : 'มาใหม่ใช่ไหม?',
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                  color: Colors.black87,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  isEnglish ? 'Basic vowel pronunciation' : 'การพื้นฐานออกเสียงสระ',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                    color: Colors.black87,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                isEnglish
-                    ? 'Tap any vowel to learn how to say it.'
-                    : 'แตะสระเพื่อเรียนรู้วิธีออกเสียง',
-                style: const TextStyle(fontSize: 12, color: Colors.black54),
-              ),
-            ],
+                const SizedBox(height: 2),
+                Text.rich(
+                  TextSpan(
+                    style: const TextStyle(fontSize: 15, color: Colors.black54),
+                    children: isEnglish
+                        ? const [
+                            TextSpan(text: 'Vowel sounds are produced by the '),
+                            TextSpan(
+                              text: '"part of the tongue"',
+                              style: TextStyle(color: Colors.black87),
+                            ),
+                            TextSpan(text: ' and '),
+                            TextSpan(
+                              text: '"tongue height"',
+                              style: TextStyle(color: Colors.black87),
+                            ),
+                            TextSpan(
+                              text:
+                                  ' used, which vary to create diverse and distinct vowel sounds.',
+                            ),
+                          ]
+                        : const [
+                            TextSpan(text: 'การออกเสียงสระเกิดจากการกำหนด '),
+                            TextSpan(
+                              text: '"ส่วนของลิ้น"',
+                              style: TextStyle(color: Colors.black87),
+                            ),
+                            TextSpan(text: 'เเละ '),
+                            TextSpan(
+                              text: '"ระดับของลิ้น"',
+                              style: TextStyle(color: Colors.black87),
+                            ),
+                            TextSpan(
+                              text:
+                                  'ที่เเตกต่างกันทำให้เกิดเสียงสระที่หลากหลายเเละชัดเจน',
+                            ),
+                          ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
+    );
+  }
+}
+
+// ── "Parts of the tongue" section ───────────────────────────────────────────
+
+class _TongueSection extends StatelessWidget {
+  final bool isEnglish;
+  const _TongueSection({required this.isEnglish});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          isEnglish ? 'Parts of the Tongue' : 'ส่วนของลิ้น',
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
+          ),
+        ),
+        const SizedBox(height: 12),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(14),
+          child: Image.asset(
+            'assets/lessons/1.png',
+            width: double.infinity,
+            fit: BoxFit.cover,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ── "Tongue height" section ─────────────────────────────────────────────────
+
+class _TongueHeightSection extends StatefulWidget {
+  final bool isEnglish;
+  const _TongueHeightSection({required this.isEnglish});
+
+  @override
+  State<_TongueHeightSection> createState() => _TongueHeightSectionState();
+}
+
+class _TongueHeightSectionState extends State<_TongueHeightSection> {
+  static const _levels = [
+    (image: 1, en: 'High', th: 'สูง'),
+    (image: 2, en: 'Semi-high', th: 'กึ่งสูง'),
+    (image: 3, en: 'Semi-low', th: 'กึ่งต่ำ'),
+    (image: 4, en: 'Low', th: 'ต่ำ'),
+  ];
+
+  int _selected = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = widget.isEnglish
+        ? (String en, String th) => en
+        : (String en, String th) => th;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          t('Tongue Height', 'ระดับของลิ้น'),
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
+          ),
+        ),
+        const SizedBox(height: 12),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(14),
+          child: Image.asset(
+            'assets/lessons/slide/${_levels[_selected].image}.png',
+            width: double.infinity,
+            fit: BoxFit.cover,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            for (var i = 0; i < _levels.length; i++) ...[
+              if (i > 0) const SizedBox(width: 8),
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => setState(() => _selected = i),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    decoration: BoxDecoration(
+                      color: _selected == i
+                          ? const Color(0xFF1A7A50)
+                          : Colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: _selected == i
+                            ? const Color(0xFF1A7A50)
+                            : Colors.black12,
+                      ),
+                    ),
+                    child: Text(
+                      t(_levels[i].en, _levels[i].th),
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: _selected == i ? Colors.white : Colors.black87,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ],
     );
   }
 }

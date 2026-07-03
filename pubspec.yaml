@@ -33,6 +33,8 @@ flutter:
   uses-material-design: true
   assets:
     - assets/picture/
+    - assets/lessons/
+    - assets/lessons/slide/
 
     - assets/samples/1/
     - assets/samples/2/

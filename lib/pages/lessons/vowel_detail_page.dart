@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/pages/lessons/lessonELM/info_chip.dart';
 import 'package:frontend/pages/practice/word_grid_page.dart';
 import 'package:frontend/services/language_controller.dart';
 import 'package:frontend/services/practice_api.dart';
 import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:youtube_player_flutter/youtube_player_flutter.dart'; // ✨ เปลี่ยนเป็นแพ็คเกจที่คุณเลือก
-
+import 'package:youtube_player_flutter/youtube_player_flutter.dart'; 
 class VowelDetailPage extends StatefulWidget {
   final VowelDetail vowel;
   final bool isEnglish;
@@ -178,24 +178,24 @@ class _VowelDetailPageState extends State<VowelDetailPage> {
                   runSpacing: 8,
                   children: [
                     if ((isEnglish ? vowel.lipsEn : vowel.lipsTh) != null)
-                      _InfoChip(
+                      InfoChip(
                         label: t('Lips', 'ริมฝีปาก'),
                         value: (isEnglish ? vowel.lipsEn : vowel.lipsTh)!,
                       ),
                     if ((isEnglish ? vowel.tongueEn : vowel.tongueTh) != null)
-                      _InfoChip(
+                      InfoChip(
                         label: t('Tongue', 'ลิ้น'),
                         value: (isEnglish ? vowel.tongueEn : vowel.tongueTh)!,
                       ),
-                    if ((isEnglish ? vowel.jawEn : vowel.jawTh) != null)
-                      _InfoChip(
-                        label: t('Jaw', 'ขากรรไกร'),
-                        value: (isEnglish ? vowel.jawEn : vowel.jawTh)!,
-                      ),
-                    _InfoChip(
-                      label: t('Duration', 'ระยะเวลา'),
-                      value: isLong ? t('Long', 'ยาว') : t('Short', 'สั้น'),
-                    ),
+                    // if ((isEnglish ? vowel.jawEn : vowel.jawTh) != null)
+                    //   _InfoChip(
+                    //     label: t('Jaw', 'ขากรรไกร'),
+                    //     value: (isEnglish ? vowel.jawEn : vowel.jawTh)!,
+                    //   ),
+                    // _InfoChip(
+                    //   label: t('Duration', 'ระยะเวลา'),
+                    //   value: isLong ? t('Long', 'ยาว') : t('Short', 'สั้น'),
+                    // ),
                   ],
                 ),
               ],
@@ -210,32 +210,7 @@ class _VowelDetailPageState extends State<VowelDetailPage> {
               child: player, // ✨ สั่ง Render ตัวแปร player ที่แกะมาจากโครงสร้างด้านบนโดยตรง
             ),
             const SizedBox(height: 6),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'native speaker',
-                  style: TextStyle(fontSize: 12, color: Colors.black45),
-                ),
-                GestureDetector(
-                  onTap: () async {
-                    if (widget.vowel.linkVideo == null) return;
-                    final url = Uri.parse(widget.vowel.linkVideo!);
-                    if (await canLaunchUrl(url)) {
-                      await launchUrl(url, mode: LaunchMode.externalApplication);
-                    }
-                  },
-                  child: const Text(
-                    'Watch on YouTube ↗',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Color(0xFF1A7A50),
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+            
             const SizedBox(height: 20),
           ],
 
@@ -293,44 +268,6 @@ class _VowelDetailPageState extends State<VowelDetailPage> {
         ),
       ),
       builder: (_, player) => buildScaffold(player),
-    );
-  }
-}
-
-// ── Pronunciation attribute chip ──────────────────────────────────────────────
-
-class _InfoChip extends StatelessWidget {
-  final String label;
-  final String value;
-  const _InfoChip({required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.black12),
-      ),
-      child: RichText(
-        text: TextSpan(
-          children: [
-            TextSpan(
-              text: '$label: ',
-              style: const TextStyle(fontSize: 12, color: Colors.black54),
-            ),
-            TextSpan(
-              text: value,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: Colors.black87,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
