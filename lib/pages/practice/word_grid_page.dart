@@ -164,21 +164,21 @@ class _WordGridPageState extends State<WordGridPage> {
                                   const SectionBadge(1),
                                   const SizedBox(width: 8),
                                   Text(
-                                    t('just the vowel', 'แค่สระ'),
+                                    t('Vowel', 'สระ'),
                                     style: const TextStyle(
                                       fontWeight: FontWeight.bold,
-                                      fontSize: 15,
+                                      fontSize: 20,
                                       color: Colors.black87,
                                     ),
                                   ),
                                   const SizedBox(width: 8),
-                                  Text(
-                                    t('say it alone', 'ออกเสียงเดี่ยว'),
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      color: Colors.grey[500],
-                                    ),
-                                  ),
+                                  // Text(
+                                  //   t('Vowel', 'สระ'),
+                                  //   style: TextStyle(
+                                  //     fontSize: 13,
+                                  //     color: Colors.grey[500],
+                                  //   ),
+                                  // ),
                                 ],
                               ),
                               const SizedBox(height: 10),
@@ -196,19 +196,19 @@ class _WordGridPageState extends State<WordGridPage> {
                                   const SectionBadge(2),
                                   const SizedBox(width: 8),
                                   Text(
-                                    t('With letters', 'คำที่ใช้สระนี้'),
+                                    t('Word with vowel', 'คำที่มีสระ'),
                                     style: const TextStyle(
                                       fontWeight: FontWeight.bold,
-                                      fontSize: 15,
+                                      fontSize: 20,
                                       color: Colors.black87,
                                     ),
                                   ),
-                                  const SizedBox(width: 8),
+                                  const SizedBox(width: 10),
                                   Text(
                                     t('${_wordLessons.length} words',
                                         '${_wordLessons.length} คำ'),
                                     style: TextStyle(
-                                      fontSize: 13,
+                                      fontSize: 15,
                                       color: Colors.grey[500],
                                     ),
                                   ),

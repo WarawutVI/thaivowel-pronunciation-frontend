@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:frontend/services/language_controller.dart';
 import 'package:frontend/services/practice_api.dart';
 import 'package:frontend/widgets/language_toggle_button.dart';
@@ -75,6 +76,12 @@ class _NationalityPageState extends State<NationalityPage> {
     'Other',
   ];
 
+  static const _flagFiles = {
+    'Thai': 'Thai.jpg',
+    'Chinese': 'Chinese.svg',
+    'Laotian': 'Laotian.svg',
+  };
+
   @override
   void initState() {
     super.initState();
@@ -99,6 +106,22 @@ class _NationalityPageState extends State<NationalityPage> {
   }
 
   String t(String en, String th) => isEnglish ? en : th;
+
+  Widget _buildFlag(String nationality, bool isSelected) {
+    final file = _flagFiles[nationality];
+    if (file == null) {
+      return Icon(
+        Icons.flag,
+        size: 20,
+        color: isSelected ? Colors.white : Colors.grey,
+      );
+    }
+    final path = 'assets/picture/flags/$file';
+    final flag = file.endsWith('.svg')
+        ? SvgPicture.asset(path, width: 28, height: 20, fit: BoxFit.cover)
+        : Image.asset(path, width: 28, height: 20, fit: BoxFit.cover);
+    return ClipRRect(borderRadius: BorderRadius.circular(3), child: flag);
+  }
 
   Future<void> _createAccount(String nationality) async {
     try {
@@ -205,17 +228,23 @@ class _NationalityPageState extends State<NationalityPage> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              n,
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: isSelected
-                                    ? FontWeight.bold
-                                    : FontWeight.normal,
-                                color: isSelected
-                                    ? Colors.white
-                                    : Colors.black87,
-                              ),
+                            Row(
+                              children: [
+                                _buildFlag(n, isSelected),
+                                const SizedBox(width: 12),
+                                Text(
+                                  n,
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: isSelected
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
+                                    color: isSelected
+                                        ? Colors.white
+                                        : Colors.black87,
+                                  ),
+                                ),
+                              ],
                             ),
                             if (isSelected)
                               const Icon(Icons.check,

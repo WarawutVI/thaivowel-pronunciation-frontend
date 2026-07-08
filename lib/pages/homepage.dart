@@ -76,7 +76,7 @@ class _HomepageState extends State<Homepage> {
                 borderRadius: BorderRadius.circular(10),
               ),
               child: const Center(
-                child: Text('🔥', style: TextStyle(fontSize: 20)),
+                child: Text('🔥', style: TextStyle(fontSize: 50)),
               ),
             ),
             const SizedBox(width: 10),
@@ -88,21 +88,21 @@ class _HomepageState extends State<Homepage> {
                     t('Hi, $_userName 👋', 'สวัสดี, $_userName 👋'),
                     style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 14,
+                      fontSize: 18,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     t('Daily streak', 'วันที่ฝึกต่อเนื่อง'),
-                    style: const TextStyle(color: Colors.white70, fontSize: 15),
+                    style: const TextStyle(color: Colors.white70, fontSize: 18),
                   ),
                   Text(
                     t('$_currentStreak days ', ' $_currentStreak วัน'),
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 40,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ],
@@ -124,7 +124,7 @@ class _HomepageState extends State<Homepage> {
                     t('best $_longestStreak', 'สถิติ $_longestStreak'),
                     style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 12,
+                        fontSize: 16,
                         fontWeight: FontWeight.w600),
                   ),
                 ],
@@ -260,21 +260,21 @@ class _HomepageState extends State<Homepage> {
               onTap: () => Get.to(() => const Progreespage()),
             ),
             const SizedBox(height: 24),
-            Center(
-              child: Text(
-                t('Have Fun with Thai Vowels', 'สนุกกับสระภาษาไทย'),
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-              ),
-            ),
+            // Center(
+            //   child: Text(
+            //     t('Have Fun with Thai Vowels', 'สนุกกับสระภาษาไทย'),
+            //     style: const TextStyle(
+            //       fontSize: 16,
+            //       fontWeight: FontWeight.bold,
+            //       color: Colors.black87,
+            //     ),
+            //   ),
+            // ),
             const SizedBox(height: 3),
             Center(
               child: Image.asset(
                 'assets/picture/iconpracticepage.png',
-                height: 180,
+                height: 150,
               ),
             ),
           ],

@@ -116,16 +116,16 @@ class _VowelInfoDialogState extends State<_VowelInfoDialog> {
                                 ? _detail!.tongueEn
                                 : _detail!.tongueTh)!,
                           ),
-                        if ((widget.isEnglish
-                                ? _detail!.jawEn
-                                : _detail!.jawTh) !=
-                            null)
-                          _Chip(
-                            label: t('Jaw', 'ขากรรไกร'),
-                            value: (widget.isEnglish
-                                ? _detail!.jawEn
-                                : _detail!.jawTh)!,
-                          ),
+                        // if ((widget.isEnglish
+                        //         ? _detail!.jawEn
+                        //         : _detail!.jawTh) !=
+                        //     null)
+                        //   _Chip(
+                        //     label: t('Jaw', 'ขากรรไกร'),
+                        //     value: (widget.isEnglish
+                        //         ? _detail!.jawEn
+                        //         : _detail!.jawTh)!,
+                        //   ),
                       ],
                     ),
                   ],

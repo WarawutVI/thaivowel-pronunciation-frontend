@@ -105,10 +105,10 @@ class _PracticepageState extends State<Practicepage> {
                 const SizedBox(height: 8),
                 Text(
                   t(
-                    'Pick a vowel length. Short or long — every "a" matters in Thai.',
-                    'เลือกความยาวสระ สั้นหรือยาว — ทุกเสียงสำคัญในภาษาไทย',
+                    'Pick a vowel length. Short or long vowel.',
+                    'เลือกความยาวสระ สั้นหรือยาว ',
                   ),
-                  style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+                  style: TextStyle(fontSize: 15, color: Colors.grey[600]),
                 ),
               ],
             ),
