@@ -3,20 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:frontend/pages/progressELM/avg_accuracy_donuts.dart';
 import 'package:frontend/services/language_controller.dart';
 import 'package:frontend/pages/progressELM/practice_count_chart.dart';
-import 'package:frontend/pages/progressELM/recent_sessions_list.dart';
+import 'package:frontend/pages/progressELM/history_box.dart';
 import 'package:frontend/pages/progressELM/summary_card.dart';
 import 'package:frontend/pages/progressELM/trend_card.dart';
 import 'package:frontend/pages/progressELM/weak_vowels_list.dart';
 import 'package:frontend/services/practice_api.dart';
 import 'package:get/get.dart';
 
-/// Progress analytics dashboard.
-///
-/// This file is intentionally thin — it only:
-///   1. Loads the data needed by child widgets.
-///   2. Lays out those widgets in a scrollable column.
-///
-/// Each section lives in its own file under lib/pages/progressELM/.
+
 class Progreespage extends StatefulWidget {
   const Progreespage({super.key});
 
@@ -64,7 +58,9 @@ class _ProgreespageState extends State<Progreespage> {
         PracticeApi.fetchStreak(_uid),
         PracticeApi.fetchVowelStats(_uid, 'short'),
         PracticeApi.fetchVowelStats(_uid, 'long'),
-        PracticeApi.fetchRecentSessions(_uid),
+        // Fetch one more than HistoryBox displays (5) so it can tell
+        // whether a "Show more" link is needed.
+        PracticeApi.fetchRecentSessions(_uid, limit: 6),
       ]);
       setState(() {
         _summary = results[0] as ProgressSummary;
@@ -172,7 +168,7 @@ class _ProgreespageState extends State<Progreespage> {
             const SizedBox(height: 16),
 
             // 5 — Recent sessions list
-            RecentSessionsList(
+            HistoryBox(
               sessions: _recentSessions,
               isEnglish: isEnglish,
             ),
