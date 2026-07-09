@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:frontend/services/language_controller.dart';
 import 'package:frontend/widgets/language_toggle_button.dart';
 import 'package:frontend/auth/forgot.dart';
@@ -219,17 +220,11 @@ class _LoginState extends State<Login> {
   }
 
   Widget _googleLogo() {
-    return const SizedBox(
+    return SvgPicture.network(
+      'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg',
       width: 22,
       height: 22,
-      child: Text(
-        'G',
-        style: TextStyle(
-          color: Color(0xFF4285F4),
-          fontWeight: FontWeight.bold,
-          fontSize: 18,
-        ),
-      ),
+      placeholderBuilder: (_) => const SizedBox(width: 22, height: 22),
     );
   }
 
@@ -246,13 +241,9 @@ class _LoginState extends State<Login> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      Text(
-                        t('login', 'เข้าสู่ระบบ'),
-                        style: const TextStyle(
-                            color: Colors.white70, fontSize: 14),
-                      ),
+                      
                       LanguageToggleButton(
                         isEnglish: isEnglish,
                         onChanged: (v) => setState(() => isEnglish = v),

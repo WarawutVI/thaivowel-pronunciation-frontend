@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:frontend/services/language_controller.dart';
 import 'package:frontend/services/practice_api.dart';
 import 'package:frontend/widgets/language_toggle_button.dart';
@@ -38,7 +37,7 @@ class _NationalityPageState extends State<NationalityPage> {
     'Thai',
     'Chinese',
     'Japanese',
-    'Korean',
+     'Korean',
     'Vietnamese',
     'Burmese',
     'Cambodian',
@@ -47,8 +46,7 @@ class _NationalityPageState extends State<NationalityPage> {
     'Indonesian',
     'Filipino',
     'Singaporean',
-    'Indian',
-    'Pakistani',
+    'Bruneian',
     'Bangladeshi',
     'American',
     'British',
@@ -76,10 +74,44 @@ class _NationalityPageState extends State<NationalityPage> {
     'Other',
   ];
 
-  static const _flagFiles = {
-    'Thai': 'Thai.jpg',
-    'Chinese': 'Chinese.svg',
-    'Laotian': 'Laotian.svg',
+  static const _flagLinks = {
+    'Thai': 'https://flagcdn.com/w320/th.png',
+    'Chinese': 'https://flagcdn.com/w320/cn.png',
+    'Japanese': 'https://flagcdn.com/w320/jp.png',
+    'Korean': 'https://flagcdn.com/w320/kr.png',
+    'Vietnamese': 'https://flagcdn.com/w320/vn.png',
+    'Burmese': 'https://flagcdn.com/w320/mm.png',
+    'Cambodian': 'https://flagcdn.com/w320/kh.png',
+    'Laotian': 'https://flagcdn.com/w320/la.png',
+    'Malaysian': 'https://flagcdn.com/w320/my.png',
+    'Indonesian': 'https://flagcdn.com/w320/id.png',
+    'Filipino': 'https://flagcdn.com/w320/ph.png',
+    'Singaporean': 'https://flagcdn.com/w320/sg.png',
+    'Bruneian': 'https://flagcdn.com/w320/bn.png',
+    'Bangladeshi': 'https://flagcdn.com/w320/bd.png',
+    'American': 'https://flagcdn.com/w320/us.png',
+    'British': 'https://flagcdn.com/w320/gb.png',
+    'Australian': 'https://flagcdn.com/w320/au.png',
+    'Canadian': 'https://flagcdn.com/w320/ca.png',
+    'French': 'https://flagcdn.com/w320/fr.png',
+    'German': 'https://flagcdn.com/w320/de.png',
+    'Spanish': 'https://flagcdn.com/w320/es.png',
+    'Italian': 'https://flagcdn.com/w320/it.png',
+    'Portuguese': 'https://flagcdn.com/w320/pt.png',
+    'Russian': 'https://flagcdn.com/w320/ru.png',
+    'Dutch': 'https://flagcdn.com/w320/nl.png',
+    'Swedish': 'https://flagcdn.com/w320/se.png',
+    'Norwegian': 'https://flagcdn.com/w320/no.png',
+    'Danish': 'https://flagcdn.com/w320/dk.png',
+    'Finnish': 'https://flagcdn.com/w320/fi.png',
+    'Polish': 'https://flagcdn.com/w320/pl.png',
+    'Turkish': 'https://flagcdn.com/w320/tr.png',
+    'Arabic': 'https://flagcdn.com/w320/sa.png', // Uses Saudi Arabia as the standard representative
+    'Iranian': 'https://flagcdn.com/w320/ir.png',
+    'Brazilian': 'https://flagcdn.com/w320/br.png',
+    'Argentinian': 'https://flagcdn.com/w320/ar.png',
+    'Colombian': 'https://flagcdn.com/w320/co.png',
+    'Mexican': 'https://flagcdn.com/w320/mx.png',
   };
 
   @override
@@ -108,19 +140,28 @@ class _NationalityPageState extends State<NationalityPage> {
   String t(String en, String th) => isEnglish ? en : th;
 
   Widget _buildFlag(String nationality, bool isSelected) {
-    final file = _flagFiles[nationality];
-    if (file == null) {
+    final url = _flagLinks[nationality];
+    if (url == null) {
       return Icon(
         Icons.flag,
         size: 20,
         color: isSelected ? Colors.white : Colors.grey,
       );
     }
-    final path = 'assets/picture/flags/$file';
-    final flag = file.endsWith('.svg')
-        ? SvgPicture.asset(path, width: 28, height: 20, fit: BoxFit.cover)
-        : Image.asset(path, width: 28, height: 20, fit: BoxFit.cover);
-    return ClipRRect(borderRadius: BorderRadius.circular(3), child: flag);
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(3),
+      child: Image.network(
+        url,
+        width: 28,
+        height: 20,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => Icon(
+          Icons.flag,
+          size: 20,
+          color: isSelected ? Colors.white : Colors.grey,
+        ),
+      ),
+    );
   }
 
   Future<void> _createAccount(String nationality) async {
