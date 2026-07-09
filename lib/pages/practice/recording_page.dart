@@ -1,12 +1,13 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
-import 'package:audioplayers/audioplayers.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:frontend/pages/practice/practiceELM/phase_views.dart';
+import 'package:frontend/pages/practice/practiceELM/pronunciation_suggestion.dart';
 import 'package:frontend/pages/practice/practiceELM/result_modal.dart';
+import 'package:frontend/pages/practice/practiceELM/sample_player.dart';
 import 'package:frontend/services/language_controller.dart';
 import 'package:frontend/services/practice_api.dart';
 import 'package:get/get.dart';
@@ -46,13 +47,12 @@ class _RecordingPageState extends State<RecordingPage> {
 
   late bool isEnglish;
   final AudioRecorder _recorder = AudioRecorder();
-  final AudioPlayer _samplePlayer = AudioPlayer();
+  late final SamplePlayer _samplePlayer;
 
   _Phase _phase = _Phase.idle;
   int _readyCountdown = _getReadySeconds;
   int _remainingSeconds = _recordSeconds;
   Timer? _countdownTimer;
-  bool _isPlayingSample = false;
 
   List<double> _refSamples = [];
   List<double> _userSamples = [];
@@ -70,9 +70,11 @@ class _RecordingPageState extends State<RecordingPage> {
   void initState() {
     super.initState();
     isEnglish = Get.find<LanguageController>().isEnglish;
-    _samplePlayer.onPlayerComplete.listen((_) {
-      if (mounted) setState(() => _isPlayingSample = false);
-    });
+    _samplePlayer = SamplePlayer(
+      onStateChanged: () {
+        if (mounted) setState(() {});
+      },
+    );
   }
 
   @override
@@ -83,26 +85,16 @@ class _RecordingPageState extends State<RecordingPage> {
     super.dispose();
   }
 
-  Future<void> _toggleSample() async {
-    if (_isPlayingSample) {
-      await _samplePlayer.stop();
-      setState(() => _isPlayingSample = false);
-      return;
-    }
-    try {
-      setState(() => _isPlayingSample = true);
-      await _samplePlayer.play(
-        AssetSource('samples/${widget.vowelId}/${widget.lessonOrder}.wav'),
-      );
-    } catch (_) {
-      setState(() => _isPlayingSample = false);
-      Get.snackbar(
+  Future<void> _toggleSample() {
+    return _samplePlayer.toggle(
+      'samples/${widget.vowelId}/${widget.lessonOrder}.wav',
+      onError: () => Get.snackbar(
         t('Error', 'เกิดข้อผิดพลาด'),
         t('Sample audio not available', 'ไม่มีเสียงตัวอย่าง'),
         backgroundColor: Colors.red,
         colorText: Colors.white,
-      );
-    }
+      ),
+    );
   }
 
   Future<Uint8List> _getAudioBytes(String path) async {
@@ -226,7 +218,12 @@ class _RecordingPageState extends State<RecordingPage> {
         confidence: _confidence,
         refSamples: _refSamples,
         userSamples: _userSamples,
-        suggestion: _buildSuggestion(),
+        suggestion: buildPronunciationSuggestion(
+          ref: _refFormant,
+          userF1: _userF1,
+          userF2: _userF2,
+          isEnglish: isEnglish,
+        ),
       );
     } catch (e) {
       if (!mounted) return;
@@ -238,40 +235,6 @@ class _RecordingPageState extends State<RecordingPage> {
         colorText: Colors.white,
       );
     }
-  }
-
-  String _buildSuggestion() {
-    final ref = _refFormant;
-    if (ref == null || (_userF1 == 0 && _userF2 == 0)) return '';
-
-    final f1Diff = _userF1 - ref.f1;
-    final f2Diff = _userF2 - ref.f2;
-    const f1Threshold = 200.0;
-    const f2Threshold = 200.0;
-
-    final List<String> partsEn = [];
-    final List<String> partsTh = [];
-
-    if (f1Diff > f1Threshold) {
-      partsEn.addAll(['closing your mouth slightly', 'raising your tongue']);
-      partsTh.addAll(['ปิดปากลงเล็กน้อย', 'ยกลิ้นขึ้น']);
-    } else if (f1Diff <  f1Threshold) {
-      partsEn.addAll(['opening your mouth wider', 'lowering your tongue']);
-      partsTh.addAll(['อ้าปากให้กว้างขึ้น', 'วางลิ้นให้ต่ำลง']);
-    }
-
-    if (f2Diff > f2Threshold) {
-      partsEn.add('moving your tongue slightly back');
-      partsTh.add('เลื่อนลิ้นไปด้านหลังเล็กน้อย');
-    } else if (f2Diff < f2Threshold) {
-      partsEn.addAll(['moving your tongue slightly forward', 'relaxing your lips']);
-      partsTh.addAll(['เลื่อนลิ้นไปด้านหน้าเล็กน้อย', 'ผ่อนคลายริมฝีปาก']);
-    }
-
-    if (partsEn.isEmpty) return '';
-    return isEnglish
-        ? 'Try ${partsEn.join(', ')}.'
-        : 'ลอง${partsTh.join(' ')}';
   }
 
   @override
@@ -339,7 +302,7 @@ class _RecordingPageState extends State<RecordingPage> {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(
-                    _isPlayingSample ? Icons.stop : Icons.volume_up,
+                    _samplePlayer.isPlaying ? Icons.stop : Icons.volume_up,
                     color: Colors.white,
                     size: 22,
                   ),

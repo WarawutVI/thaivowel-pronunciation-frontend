@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/services/practice_api.dart';
+import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 void showVowelInfoDialog(
     BuildContext context, int vowelId, String vowelSymbol, bool isEnglish) {
@@ -31,6 +32,7 @@ class _VowelInfoDialog extends StatefulWidget {
 class _VowelInfoDialogState extends State<_VowelInfoDialog> {
   VowelDetail? _detail;
   bool _loading = true;
+  YoutubePlayerController? _ytController;
 
   String t(String en, String th) => widget.isEnglish ? en : th;
 
@@ -40,19 +42,39 @@ class _VowelInfoDialogState extends State<_VowelInfoDialog> {
     _load();
   }
 
+  @override
+  void dispose() {
+    _ytController?.dispose();
+    super.dispose();
+  }
+
   Future<void> _load() async {
     try {
       final all = await PracticeApi.fetchVowelDetails();
       final match = all.where((v) => v.id == widget.vowelId).firstOrNull;
+      _initVideo(match?.linkVideo);
       if (mounted) setState(() { _detail = match; _loading = false; });
     } catch (_) {
       if (mounted) setState(() => _loading = false);
     }
   }
 
+  void _initVideo(String? url) {
+    if (url == null || url.isEmpty) return;
+    final videoId = YoutubePlayer.convertUrlToId(url) ?? url;
+    _ytController = YoutubePlayerController(
+      initialVideoId: videoId,
+      flags: const YoutubePlayerFlags(
+        autoPlay: false,
+        mute: false,
+        enableCaption: true,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
+    Widget buildDialog(Widget? player) => AlertDialog(
       title: Text(
         t('How to pronounce ${widget.vowelSymbol}',
             'วิธีออกเสียง ${widget.vowelSymbol}'),
@@ -129,6 +151,13 @@ class _VowelInfoDialogState extends State<_VowelInfoDialog> {
                       ],
                     ),
                   ],
+                  if (player != null) ...[
+                    const SizedBox(height: 14),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: player,
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -139,6 +168,20 @@ class _VowelInfoDialogState extends State<_VowelInfoDialog> {
               style: const TextStyle(color: Color(0xFF1A7A50))),
         ),
       ],
+    );
+
+    if (_ytController == null) return buildDialog(null);
+    return YoutubePlayerBuilder(
+      player: YoutubePlayer(
+        controller: _ytController!,
+        showVideoProgressIndicator: true,
+        progressIndicatorColor: const Color(0xFF1A7A50),
+        progressColors: const ProgressBarColors(
+          playedColor: Color(0xFF1A7A50),
+          handleColor: Color(0xFF1A7A50),
+        ),
+      ),
+      builder: (_, player) => buildDialog(player),
     );
   }
 }
