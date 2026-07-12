@@ -224,6 +224,9 @@ class _RecordingPageState extends State<RecordingPage> {
           userF2: _userF2,
           isEnglish: isEnglish,
         ),
+        userF1: _userF1,
+        userF2: _userF2,
+        ref: _refFormant,
       );
     } catch (e) {
       if (!mounted) return;

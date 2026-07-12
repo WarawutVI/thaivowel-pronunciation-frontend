@@ -6,7 +6,11 @@ String buildPronunciationSuggestion({
   required double userF2,
   required bool isEnglish,
 }) {
-  if (ref == null || (userF1 == 0 && userF2 == 0)) return '';
+  if (ref == null || (userF1 == 0 && userF2 == 0)) {
+    return isEnglish
+        ? "We couldn't hear you clearly. Try recording again, speaking clearly into the mic."
+        : 'เราฟังเสียงคุณไม่ชัดเจน ลองบันทึกใหม่อีกครั้ง พูดให้ชัดเจนเข้าไมโครโฟนนะ';
+  }
 
   final List<String> partsEn = [];
   final List<String> partsTh = [];
@@ -51,7 +55,11 @@ String buildPronunciationSuggestion({
     }
   }
 
-  if (partsEn.isEmpty) return '';
+  if (partsEn.isEmpty) {
+    return isEnglish
+        ? 'Try to match the sample audio more closely.'
+        : 'ลองออกเสียงให้ใกล้เคียงกับเสียงตัวอย่างมากขึ้นนะ';
+  }
   return isEnglish
       ? 'Try ${partsEn.join(', ')}.'
       : 'ลอง${partsTh.join(' ')}';

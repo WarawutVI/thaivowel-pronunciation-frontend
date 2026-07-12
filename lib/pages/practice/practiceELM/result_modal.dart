@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/pages/progressELM/progress_shared.dart';
-import 'package:frontend/widgets/waveform_display.dart';
+import 'package:frontend/services/practice_api.dart';
 import 'package:get/get.dart';
 
 void showResultModal(
@@ -10,6 +10,9 @@ void showResultModal(
   required List<double> refSamples,
   required List<double> userSamples,
   required String suggestion,
+  required double userF1,
+  required double userF2,
+  VowelFormant? ref,
 }) {
   String t(String en, String th) => isEnglish ? en : th;
   final passed = confidence >= 0.51;
@@ -39,11 +42,21 @@ void showResultModal(
                   ),
                 ),
                 const SizedBox(height: 16),
-                WaveformDisplay(
-                  refSamples: refSamples,
-                  userSamples: userSamples,
-                  refLabel: t('Sample Audio', 'เสียงตัวอย่าง'),
-                  userLabel: t('Your Audio', 'เสียงของคุณ'),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: SizedBox(
+                    height: 32,
+                    width: double.infinity,
+                    child: Stack(
+                      children: [
+                        Container(color: Colors.grey.shade200),
+                        FractionallySizedBox(
+                          widthFactor: confidence.clamp(0.0, 1.0),
+                          child: Container(color: accuracyColor(confidence)),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 14),
                 Center(
@@ -59,6 +72,30 @@ void showResultModal(
                     ),
                   ),
                 ),
+                if (ref != null) ...[
+                  const SizedBox(height: 14),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _FormantStat(
+                        label: 'F1',
+                        userValue: userF1,
+                        target: ref.hasRange
+                            ? '${ref.f1Min!.round()}-${ref.f1Max!.round()}'
+                            : '${ref.f1.round()}',
+                        isEnglish: isEnglish,
+                      ),
+                      _FormantStat(
+                        label: 'F2',
+                        userValue: userF2,
+                        target: ref.hasRange
+                            ? '${ref.f2Min!.round()}-${ref.f2Max!.round()}'
+                            : '${ref.f2.round()}',
+                        isEnglish: isEnglish,
+                      ),
+                    ],
+                  ),
+                ],
                 if (suggestion.isNotEmpty && !passed) ...[
                   const SizedBox(height: 14),
                   RichText(
@@ -135,4 +172,45 @@ void showResultModal(
       ),
     ),
   );
+}
+
+class _FormantStat extends StatelessWidget {
+  final String label;
+  final double userValue;
+  final String target;
+  final bool isEnglish;
+
+  const _FormantStat({
+    required this.label,
+    required this.userValue,
+    required this.target,
+    required this.isEnglish,
+  });
+
+  String t(String en, String th) => isEnglish ? en : th;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          '${t('You', 'คุณ')}: ${userValue.round()} Hz',
+          style: const TextStyle(fontSize: 12, color: Colors.black87),
+        ),
+        Text(
+          '${t('Target', 'เป้าหมาย')}: $target Hz',
+          style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+        ),
+      ],
+    );
+  }
 }
