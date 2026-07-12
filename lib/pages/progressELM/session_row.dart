@@ -3,54 +3,37 @@ import 'package:frontend/pages/progressELM/progress_shared.dart';
 import 'package:frontend/services/practice_api.dart';
 import 'package:intl/intl.dart';
 
-/// Scrollable list of the most recent practice sessions.
-class RecentSessionsList extends StatelessWidget {
-  final List<SessionRecord> sessions;
+/// A single practice-session row, shared by HistoryBox and AllHistoryPage.
+class SessionRow extends StatelessWidget {
+  final SessionRecord session;
   final bool isEnglish;
 
-  const RecentSessionsList({
+  const SessionRow({
     super.key,
-    required this.sessions,
+    required this.session,
     required this.isEnglish,
   });
 
   String t(String en, String th) => isEnglish ? en : th;
 
-  @override
-  Widget build(BuildContext context) {
-    return ProgressCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            t('Recent Sessions', 'เซสชันล่าสุด'),
-            style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87),
-          ),
-          const SizedBox(height: 12),
-          if (sessions.isEmpty)
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Text(t('No sessions yet', 'ยังไม่มีเซสชัน'),
-                    style: const TextStyle(color: Colors.grey)),
-              ),
-            )
-          else
-            ...sessions.map(_buildRow),
-        ],
-      ),
-    );
+  String _timeLabel(DateTime dt) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final day = DateTime(dt.year, dt.month, dt.day);
+    final time = DateFormat('HH:mm').format(dt);
+
+    if (day == today) return '${t('Today', 'วันนี้')} · $time';
+    if (day == today.subtract(const Duration(days: 1))) {
+      return '${t('Yesterday', 'เมื่อวาน')} · $time';
+    }
+    return '${DateFormat('MMM d').format(dt)} · $time';
   }
 
-  // ── Single session row ──────────────────────────────────────────────────────
-
-  Widget _buildRow(SessionRecord s) {
+  @override
+  Widget build(BuildContext context) {
+    final s = session;
     final color = accuracyColor(s.confidence);
     final pct = (s.confidence * 100).round();
-    final isLong = s.vowelType == 'long';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -66,20 +49,16 @@ class RecentSessionsList extends StatelessWidget {
             width: 42,
             height: 42,
             decoration: BoxDecoration(
-              color: isLong
-                  ? const Color(0xFFE8F5EE)
-                  : const Color(0xFFFFEEE8),
+              color: color.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Center(
               child: Text(
-                s.symbol,
+                s.lessonName,
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: isLong
-                      ? const Color(0xFF1A7A50)
-                      : const Color(0xFFFF8C42),
+                  color: color,
                 ),
               ),
             ),
@@ -92,7 +71,7 @@ class RecentSessionsList extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  s.lessonName,
+                  assessmentLabel(s.confidence, isEnglish),
                   style: const TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
@@ -126,20 +105,5 @@ class RecentSessionsList extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  // ── Relative timestamp label ────────────────────────────────────────────────
-
-  String _timeLabel(DateTime dt) {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final day = DateTime(dt.year, dt.month, dt.day);
-    final time = DateFormat('HH:mm').format(dt);
-
-    if (day == today) return '${t('Today', 'วันนี้')} · $time';
-    if (day == today.subtract(const Duration(days: 1))) {
-      return '${t('Yesterday', 'เมื่อวาน')} · $time';
-    }
-    return '${DateFormat('MMM d').format(dt)} · $time';
   }
 }

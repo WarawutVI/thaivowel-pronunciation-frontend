@@ -7,8 +7,8 @@ class SectionBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 24,
-      height: 24,
+      width: 28,
+      height: 28,
       decoration: BoxDecoration(
         color: const Color(0xFF1A7A50),
         borderRadius: BorderRadius.circular(6),
@@ -19,7 +19,7 @@ class SectionBadge extends StatelessWidget {
           style: const TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,
-            fontSize: 13,
+            fontSize: 15,
           ),
         ),
       ),

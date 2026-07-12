@@ -47,57 +47,54 @@ class _GenderPageState extends State<GenderPage> {
         ));
   }
 
-  Widget _buildGenderIcon(String gender) {
+  Widget _buildGenderCard(String gender) {
     final isSelected = selectedGender == gender;
-    final color =
-        isSelected ? const Color(0xFF1A7A50) : const Color(0xFFCCCCCC);
-    const double circleSize = 85;
-    const double bodyWidth = 120;
-    const double bodyHeight = 212;
-
-    Widget body;
-    if (gender == 'male') {
-      body = CustomPaint(
-        painter: TrianglePainter(color: color, pointingDown: true),
-        size: const Size(bodyWidth, bodyHeight),
-      );
-    } else if (gender == 'female') {
-      body = CustomPaint(
-        painter: TrianglePainter(color: color, pointingDown: false),
-        size: const Size(bodyWidth, bodyHeight),
-      );
-    } else {
-      body = CustomPaint(
-        painter: DiamondPainter(color: color),
-        size: const Size(bodyWidth, bodyHeight),
-      );
-    }
-
-    final label = gender == 'male'
-        ? t('Male', 'ชาย')
-        : gender == 'female'
-            ? t('Female', 'หญิง')
-            : t('Other', 'อื่นๆ');
+    final isFemale = gender == 'female';
+    final cardColor = isFemale ? const Color(0xFFFCE4EC) : const Color(0xFFDCEEFF);
+    final label = isFemale ? t('Female', 'หญิง') : t('Male', 'ชาย');
 
     return GestureDetector(
       onTap: () => setState(() => selectedGender = gender),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: circleSize,
-            height: circleSize,
-            decoration: BoxDecoration(shape: BoxShape.circle, color: color),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(vertical: 20),
+        decoration: BoxDecoration(
+          color: cardColor,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? const Color(0xFF1A7A50) : Colors.transparent,
+            width: 3,
           ),
-          const SizedBox(height: 10),
-          body,
-          const SizedBox(height: 12),
-          Text(
-            label,
-            style: TextStyle(
-                color: color, fontWeight: FontWeight.w600, fontSize: 14),
-          ),
-        ],
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: const Color(0xFF1A7A50).withValues(alpha: 0.25),
+                    blurRadius: 12,
+                    offset: const Offset(0, 6),
+                  ),
+                ]
+              : null,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Image.asset(
+              isFemale ? 'assets/picture/female.png' : 'assets/picture/male.png',
+              width: 200,
+              height: 200,
+              fit: BoxFit.contain,
+            ),
+            const SizedBox(height: 14),
+            Text(
+              label,
+              style: TextStyle(
+                color: isSelected ? const Color(0xFF1A7A50) : Colors.black87,
+                fontWeight: FontWeight.w700,
+                fontSize: 15,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -151,10 +148,9 @@ class _GenderPageState extends State<GenderPage> {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Expanded(child: _buildGenderIcon('male')),
-                    Container(
-                        width: 2, height: 400, color: Colors.grey[200]),
-                    Expanded(child: _buildGenderIcon('female')),
+                    Expanded(child: _buildGenderCard('female')),
+                    const SizedBox(width: 16),
+                    Expanded(child: _buildGenderCard('male')),
                   ],
                 ),
               ),
@@ -200,53 +196,4 @@ class _GenderPageState extends State<GenderPage> {
       ),
     );
   }
-}
-
-class TrianglePainter extends CustomPainter {
-  final Color color;
-  final bool pointingDown;
-
-  const TrianglePainter({required this.color, required this.pointingDown});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()..color = color;
-    final path = Path();
-    if (pointingDown) {
-      path.moveTo(0, 0);
-      path.lineTo(size.width, 0);
-      path.lineTo(size.width / 2, size.height);
-    } else {
-      path.moveTo(size.width / 2, 0);
-      path.lineTo(size.width, size.height);
-      path.lineTo(0, size.height);
-    }
-    path.close();
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant TrianglePainter old) =>
-      old.color != color || old.pointingDown != pointingDown;
-}
-
-class DiamondPainter extends CustomPainter {
-  final Color color;
-
-  const DiamondPainter({required this.color});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()..color = color;
-    final path = Path();
-    path.moveTo(size.width / 2, 0);
-    path.lineTo(size.width, size.height / 2);
-    path.lineTo(size.width / 2, size.height);
-    path.lineTo(0, size.height / 2);
-    path.close();
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant DiamondPainter old) => old.color != color;
 }

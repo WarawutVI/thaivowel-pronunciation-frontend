@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:frontend/services/language_controller.dart';
 import 'package:frontend/widgets/language_toggle_button.dart';
 import 'package:frontend/auth/gender.dart';
@@ -252,21 +253,11 @@ class _SignupState extends State<Signup> {
   }
 
   Widget _googleLogo() {
-    return SizedBox(
+    return SvgPicture.network(
+      'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg',
       width: 22,
       height: 22,
-      child: RichText(
-        text: const TextSpan(
-          children: [
-            TextSpan(
-                text: 'G',
-                style: TextStyle(
-                    color: Color(0xFF4285F4),
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18)),
-          ],
-        ),
-      ),
+      placeholderBuilder: (_) => const SizedBox(width: 22, height: 22),
     );
   }
 

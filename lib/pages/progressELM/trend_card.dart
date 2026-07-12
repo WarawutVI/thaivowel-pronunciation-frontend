@@ -7,7 +7,7 @@ import 'package:intl/intl.dart';
 /// Accuracy trend line chart — three periods:
 ///   • 1W : avg accuracy per day  for the last 7 days
 ///   • 1M : avg accuracy per week for the last 30 days
-///   • 1Y : avg accuracy per month for the last 12 months
+///   • 3M : avg accuracy per week for the last 90 days
 ///
 /// X-axis always shows "d MMM" dates (~5 labels, evenly spaced).
 /// Y-axis is always 0–100 %.
@@ -33,7 +33,7 @@ class _TrendCardState extends State<TrendCard> {
   bool _loading = false;
 
   String _vowelType = 'short';  // 'short' | 'long'
-  String _period    = 'week';   // 'week'  | 'month' | 'year'
+  String _period    = 'week';   // 'week'  | 'month' | 'quarter'
 
   // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -52,10 +52,19 @@ class _TrendCardState extends State<TrendCard> {
   Future<void> _loadTrend() async {
     setState(() => _loading = true);
     try {
+      // 'quarter' (3M) reuses the backend's weekly-bucket 'month' grouping,
+      // just over a wider explicit date range, since the backend has no
+      // dedicated 3-month period.
+      final isQuarter = _period == 'quarter';
+      final now = DateTime.now();
       final data = await PracticeApi.fetchTrend(
         widget.firebaseUid,
         _vowelType,
-        period: _period,
+        period: isQuarter ? 'month' : _period,
+        start: isQuarter
+            ? DateFormat('yyyy-MM-dd').format(now.subtract(const Duration(days: 90)))
+            : null,
+        end: isQuarter ? DateFormat('yyyy-MM-dd').format(now) : null,
       );
       setState(() {
         _trendData = data;
@@ -118,7 +127,7 @@ class _TrendCardState extends State<TrendCard> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
-          t('Accuracy Trend', 'แนวโน้มความแม่นยำ'),
+          t('Accuracy Trend', 'แนวโน้มความถูกต้อง'),
           style: const TextStyle(
               fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87),
         ),
@@ -172,6 +181,9 @@ class _TrendCardState extends State<TrendCard> {
           maxX: maxX,
           minY: 0,    // Y-axis always 0–100 %
           maxY: 100,
+          // Curved lines can overshoot past minY/maxY between sharp spikes;
+          // clip so that overshoot doesn't bleed into the axis labels.
+          clipData: const FlClipData.all(),
           lineBarsData: [
             LineChartBarData(
               spots: spots,
@@ -234,13 +246,13 @@ class _TrendCardState extends State<TrendCard> {
     );
   }
 
-  // ── Period buttons below chart: 1W | 1M | 1Y ─────────────────────────────────
+  // ── Period buttons below chart: 1W | 1M | 3M ─────────────────────────────────
 
   Widget _buildPeriodButtons() {
     final options = [
-      ('week',  '1W'),
-      ('month', '1M'),
-      ('year',  '1Y'),
+      ('week',    '1W'),
+      ('month',   '1M'),
+      ('quarter', '3M'),
     ];
 
     return Row(
@@ -291,9 +303,9 @@ class _TrendCardState extends State<TrendCard> {
     final isUp   = delta >= 0;
     final color  = isUp ? const Color(0xFF1A7A50) : const Color(0xFFFF8C42);
     final label  = switch (_period) {
-      'week'  => t('this week',  'สัปดาห์นี้'),
-      'month' => t('this month', 'เดือนนี้'  ),
-      _       => t('this year',  'ปีนี้'     ),
+      'week'  => t('this week',      'สัปดาห์นี้'  ),
+      'month' => t('this month',     'เดือนนี้'    ),
+      _       => t('the last 3 months', '3 เดือนที่ผ่านมา'),
     };
 
     return Padding(

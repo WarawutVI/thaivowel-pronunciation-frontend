@@ -1,14 +1,15 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
-import 'package:audioplayers/audioplayers.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:frontend/pages/progressELM/progress_shared.dart';
+import 'package:frontend/pages/practice/practiceELM/phase_views.dart';
+import 'package:frontend/pages/practice/practiceELM/pronunciation_suggestion.dart';
+import 'package:frontend/pages/practice/practiceELM/result_modal.dart';
+import 'package:frontend/pages/practice/practiceELM/sample_player.dart';
 import 'package:frontend/services/language_controller.dart';
 import 'package:frontend/services/practice_api.dart';
-import 'package:frontend/widgets/waveform_display.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
@@ -46,13 +47,12 @@ class _RecordingPageState extends State<RecordingPage> {
 
   late bool isEnglish;
   final AudioRecorder _recorder = AudioRecorder();
-  final AudioPlayer _samplePlayer = AudioPlayer();
+  late final SamplePlayer _samplePlayer;
 
   _Phase _phase = _Phase.idle;
   int _readyCountdown = _getReadySeconds;
   int _remainingSeconds = _recordSeconds;
   Timer? _countdownTimer;
-  bool _isPlayingSample = false;
 
   List<double> _refSamples = [];
   List<double> _userSamples = [];
@@ -70,9 +70,11 @@ class _RecordingPageState extends State<RecordingPage> {
   void initState() {
     super.initState();
     isEnglish = Get.find<LanguageController>().isEnglish;
-    _samplePlayer.onPlayerComplete.listen((_) {
-      if (mounted) setState(() => _isPlayingSample = false);
-    });
+    _samplePlayer = SamplePlayer(
+      onStateChanged: () {
+        if (mounted) setState(() {});
+      },
+    );
   }
 
   @override
@@ -83,26 +85,16 @@ class _RecordingPageState extends State<RecordingPage> {
     super.dispose();
   }
 
-  Future<void> _toggleSample() async {
-    if (_isPlayingSample) {
-      await _samplePlayer.stop();
-      setState(() => _isPlayingSample = false);
-      return;
-    }
-    try {
-      setState(() => _isPlayingSample = true);
-      await _samplePlayer.play(
-        AssetSource('samples/${widget.vowelId}/${widget.lessonOrder}.wav'),
-      );
-    } catch (_) {
-      setState(() => _isPlayingSample = false);
-      Get.snackbar(
+  Future<void> _toggleSample() {
+    return _samplePlayer.toggle(
+      'samples/${widget.vowelId}/${widget.lessonOrder}',
+      onError: () => Get.snackbar(
         t('Error', 'เกิดข้อผิดพลาด'),
         t('Sample audio not available', 'ไม่มีเสียงตัวอย่าง'),
         backgroundColor: Colors.red,
         colorText: Colors.white,
-      );
-    }
+      ),
+    );
   }
 
   Future<Uint8List> _getAudioBytes(String path) async {
@@ -219,8 +211,25 @@ class _RecordingPageState extends State<RecordingPage> {
         _phase       = _Phase.idle;
       });
 
-      _showResultModal();
+      if (!mounted) return;
+      showResultModal(
+        context,
+        isEnglish: isEnglish,
+        confidence: _confidence,
+        refSamples: _refSamples,
+        userSamples: _userSamples,
+        suggestion: buildPronunciationSuggestion(
+          ref: _refFormant,
+          userF1: _userF1,
+          userF2: _userF2,
+          isEnglish: isEnglish,
+        ),
+        userF1: _userF1,
+        userF2: _userF2,
+        ref: _refFormant,
+      );
     } catch (e) {
+      if (!mounted) return;
       setState(() => _phase = _Phase.idle);
       Get.snackbar(
         t('Error', 'เกิดข้อผิดพลาด'),
@@ -229,350 +238,6 @@ class _RecordingPageState extends State<RecordingPage> {
         colorText: Colors.white,
       );
     }
-  }
-
-  String _buildSuggestion() {
-    final ref = _refFormant;
-    if (ref == null || (_userF1 == 0 && _userF2 == 0)) return '';
-
-    final f1Diff = _userF1 - ref.f1;
-    final f2Diff = _userF2 - ref.f2;
-    const f1Threshold = 100.0;
-    const f2Threshold = 200.0;
-
-    final List<String> partsEn = [];
-    final List<String> partsTh = [];
-
-    if (f1Diff > f1Threshold) {
-      partsEn.addAll(['closing your mouth slightly', 'raising your tongue']);
-      partsTh.addAll(['ปิดปากลงเล็กน้อย', 'ยกลิ้นขึ้น']);
-    } else if (f1Diff < f1Threshold) {
-      partsEn.addAll(['opening your mouth wider', 'lowering your tongue']);
-      partsTh.addAll(['อ้าปากให้กว้างขึ้น', 'วางลิ้นให้ต่ำลง']);
-    }
-
-    if (f2Diff > f2Threshold) {
-      partsEn.add('moving your tongue slightly back');
-      partsTh.add('เลื่อนลิ้นไปด้านหลังเล็กน้อย');
-    } else if (f2Diff < f2Threshold) {
-      partsEn.addAll(['moving your tongue slightly forward', 'relaxing your lips']);
-      partsTh.addAll(['เลื่อนลิ้นไปด้านหน้าเล็กน้อย', 'ผ่อนคลายริมฝีปาก']);
-    }
-
-    if (partsEn.isEmpty) return '';
-    return isEnglish
-        ? 'Try ${partsEn.join(', ')}.'
-        : 'ลอง${partsTh.join(' ')}';
-  }
-
-  void _showResultModal() {
-    final passed     = _confidence >= 0.51;
-    final level      = assessmentLabel(_confidence, isEnglish);
-    final suggestion = _buildSuggestion();
-
-    showDialog(
-      context: context,
-      builder: (ctx) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Center(
-                    child: Text(
-                      passed ? '$level 🎉' : level,
-                      style: TextStyle(
-                        fontSize: 26,
-                        fontWeight: FontWeight.bold,
-                        color: accuracyColor(_confidence),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  WaveformDisplay(
-                    refSamples: _refSamples,
-                    userSamples: _userSamples,
-                    refLabel: t('Sample Audio', 'เสียงตัวอย่าง'),
-                    userLabel: t('Your Audio', 'เสียงของคุณ'),
-                  ),
-                  const SizedBox(height: 14),
-                  Center(
-                    child: Text(
-                      t(
-                        'similarity ${(_confidence * 100).toStringAsFixed(0)}%',
-                        'ความคล้ายคลึงกัน ${(_confidence * 100).toStringAsFixed(0)}%',
-                      ),
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                      ),
-                    ),
-                  ),
-                  if (suggestion.isNotEmpty && !passed) ...[
-                    const SizedBox(height: 14),
-                    RichText(
-                      text: TextSpan(
-                        children: [
-                          TextSpan(
-                            text: '${t('suggestion', 'คำแนะนำ')} : ',
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black87,
-                            ),
-                          ),
-                          TextSpan(
-                            text: suggestion,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Colors.black87,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: 20),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () => Navigator.pop(ctx),
-                          style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: Color(0xFF1A7A50)),
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10)),
-                          ),
-                          child: Text(t('Try Again', 'ลองอีกครั้ง'),
-                              style: const TextStyle(color: Color(0xFF1A7A50))),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () {
-                            Navigator.pop(ctx);
-                            Get.back();
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF1A7A50),
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10)),
-                          ),
-                          child: Text(t('Finish', 'เสร็จสิ้น'),
-                              style: const TextStyle(color: Colors.white)),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            Positioned(
-              right: 10,
-              top: 10,
-              child: GestureDetector(
-                onTap: () => Navigator.pop(ctx),
-                child: Container(
-                  decoration: BoxDecoration(
-                      color: Colors.grey[200], shape: BoxShape.circle),
-                  child: Icon(Icons.close, color: Colors.grey[700], size: 24),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ── Phase-specific views ──────────────────────────────────────────────────────
-
-  Widget _buildIdleView() {
-    return Column(
-      key: const ValueKey(_Phase.idle),
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          widget.word,
-          style: const TextStyle(
-            fontSize: 150,
-            fontWeight: FontWeight.bold,
-            color: Colors.black87,
-          ),
-        ),
-        if (widget.wordIpa != null)
-          Text(
-            widget.wordIpa!,
-            style: const TextStyle(fontSize: 20, color: Colors.black45),
-          ),
-        const SizedBox(height: 16),
-        Text(
-          t(
-            'Press the mic and speak for $_recordSeconds seconds.',
-            'กดไมค์แล้วพูด $_recordSeconds วินาที',
-          ),
-          textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 15, color: Colors.black54),
-        ),
-        const SizedBox(height: 40),
-        GestureDetector(
-          onTap: _beginFlow,
-          child: Container(
-            padding: const EdgeInsets.all(28),
-            decoration: BoxDecoration(
-              color: const Color(0xFF1A7A50),
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF1A7A50).withValues(alpha: 0.4),
-                  blurRadius: 20,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-            ),
-            child: const Icon(Icons.mic, size: 50, color: Colors.white),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildGetReadyView() {
-    return Column(
-      key: const ValueKey(_Phase.getReady),
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          t('Get Ready!', 'เตรียมตัว!'),
-          style: const TextStyle(
-            fontSize: 28,
-            fontWeight: FontWeight.bold,
-            color: Colors.black87,
-          ),
-        ),
-        const SizedBox(height: 32),
-        SizedBox(
-          width: 140,
-          height: 140,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              SizedBox(
-                width: 140,
-                height: 140,
-                child: CircularProgressIndicator(
-                  value: _readyCountdown / _getReadySeconds,
-                  strokeWidth: 8,
-                  backgroundColor: Colors.black12,
-                  valueColor:
-                      const AlwaysStoppedAnimation<Color>(Color(0xFF1A7A50)),
-                ),
-              ),
-              Text(
-                '$_readyCountdown',
-                style: const TextStyle(
-                  fontSize: 60,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 32),
-        Text(
-          '${t('Say:', 'พูด:')} ${widget.word}',
-          style: const TextStyle(fontSize: 22, color: Colors.black54),
-        ),
-        if (widget.wordIpa != null)
-          Text(
-            widget.wordIpa!,
-            style: const TextStyle(fontSize: 16, color: Colors.black45),
-          ),
-      ],
-    );
-  }
-
-  Widget _buildRecordingView() {
-    return Column(
-      key: const ValueKey(_Phase.recording),
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          t('SPEAK', 'พูดได้เลย'),
-          style: const TextStyle(
-            fontSize: 36,
-            fontWeight: FontWeight.bold,
-            color: Colors.red,
-          ),
-        ),
-        const SizedBox(height: 12),
-        Text(
-          widget.word,
-          style: const TextStyle(
-            fontSize: 130,
-            fontWeight: FontWeight.bold,
-            color: Colors.black87,
-          ),
-        ),
-        if (widget.wordIpa != null)
-          Text(
-            widget.wordIpa!,
-            style: const TextStyle(fontSize: 18, color: Colors.black45),
-          ),
-        const SizedBox(height: 20),
-        SizedBox(
-          width: 110,
-          height: 110,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              SizedBox(
-                width: 110,
-                height: 110,
-                child: CircularProgressIndicator(
-                  value: _remainingSeconds / _recordSeconds,
-                  strokeWidth: 8,
-                  backgroundColor: Colors.black12,
-                  valueColor:
-                      const AlwaysStoppedAnimation<Color>(Colors.red),
-                ),
-              ),
-              Text(
-                '$_remainingSeconds',
-                style: const TextStyle(
-                  fontSize: 46,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.red,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildAnalyzingView() {
-    return Column(
-      key: const ValueKey(_Phase.analyzing),
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const CircularProgressIndicator(color: Color(0xFF1A7A50)),
-        const SizedBox(height: 24),
-        Text(
-          t('Analysing...', 'กำลังวิเคราะห์...'),
-          style: const TextStyle(fontSize: 18, color: Colors.black54),
-        ),
-      ],
-    );
   }
 
   @override
@@ -591,16 +256,6 @@ class _RecordingPageState extends State<RecordingPage> {
           style: const TextStyle(
               color: Colors.black87, fontWeight: FontWeight.bold),
         ),
-        actions: [
-          if (_phase == _Phase.idle)
-            IconButton(
-              onPressed: _toggleSample,
-              icon: Icon(
-                _isPlayingSample ? Icons.stop : Icons.volume_up,
-                color: const Color(0xFF1A7A50),
-              ),
-            ),
-        ],
       ),
       body: Center(
         child: Padding(
@@ -608,10 +263,30 @@ class _RecordingPageState extends State<RecordingPage> {
           child: AnimatedSwitcher(
             duration: const Duration(milliseconds: 300),
             child: switch (_phase) {
-              _Phase.idle      => _buildIdleView(),
-              _Phase.getReady  => _buildGetReadyView(),
-              _Phase.recording => _buildRecordingView(),
-              _Phase.analyzing => _buildAnalyzingView(),
+              _Phase.idle => IdleView(
+                  word: widget.word,
+                  wordIpa: widget.wordIpa,
+                  isEnglish: isEnglish,
+                  recordSeconds: _recordSeconds,
+                  onBeginFlow: _beginFlow,
+                  isPlayingSample: _samplePlayer.isPlaying,
+                  onToggleSample: _toggleSample,
+                ),
+              _Phase.getReady => GetReadyView(
+                  word: widget.word,
+                  wordIpa: widget.wordIpa,
+                  isEnglish: isEnglish,
+                  readyCountdown: _readyCountdown,
+                  getReadySeconds: _getReadySeconds,
+                ),
+              _Phase.recording => RecordingView(
+                  word: widget.word,
+                  wordIpa: widget.wordIpa,
+                  isEnglish: isEnglish,
+                  remainingSeconds: _remainingSeconds,
+                  recordSeconds: _recordSeconds,
+                ),
+              _Phase.analyzing => AnalyzingView(isEnglish: isEnglish),
             },
           ),
         ),

@@ -18,6 +18,6 @@ class SessionRecord {
         vowelType: j['vowel_type'] as String,
         lessonName: j['lesson_name'] as String,
         confidence: (j['confidence'] ?? 0.0).toDouble(),
-        practicedAt: DateTime.parse(j['practiced_at'] as String),
+        practicedAt: DateTime.parse(j['practiced_at'] as String).toLocal(),
       );
 }

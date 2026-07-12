@@ -26,10 +26,11 @@ class ProgressCard extends StatelessWidget {
   }
 }
 
-// ── Long / short vowel dropdown pill ─────────────────────────────────────────
+// ── Long / short (/ all) vowel dropdown pill ─────────────────────────────────
 class FilterPill extends StatelessWidget {
-  final String value; // 'short' | 'long'
+  final String value; // 'short' | 'long' | 'all' (if includeAll)
   final bool isEnglish;
+  final bool includeAll;
   final ValueChanged<String> onChanged;
 
   const FilterPill({
@@ -37,13 +38,40 @@ class FilterPill extends StatelessWidget {
     required this.value,
     required this.isEnglish,
     required this.onChanged,
+    this.includeAll = false,
   });
+
+  String _labelFor(String v) => switch (v) {
+        'short' => isEnglish ? 'Short vowels' : 'สระเสียงสั้น',
+        'long' => isEnglish ? 'Long vowels' : 'สระเสียงยาว',
+        _ => isEnglish ? 'All vowels' : 'สระทั้งหมด',
+      };
+
+  PopupMenuItem<String> _item(String v) => PopupMenuItem(
+        value: v,
+        child: Row(
+          children: [
+            Icon(
+              value == v ? Icons.radio_button_checked : Icons.radio_button_off,
+              size: 16,
+              color: const Color(0xFF1A7A50),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              _labelFor(v),
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: value == v ? FontWeight.w600 : FontWeight.normal,
+                color: Colors.black87,
+              ),
+            ),
+          ],
+        ),
+      );
 
   @override
   Widget build(BuildContext context) {
-    final label = value == 'short'
-        ? (isEnglish ? 'Short vowels' : 'สระเสียงสั้น')
-        : (isEnglish ? 'Long vowels' : 'สระเสียงยาว');
+    final label = _labelFor(value);
 
     return PopupMenuButton<String>(
       initialValue: value,
@@ -53,48 +81,9 @@ class FilterPill extends StatelessWidget {
       elevation: 4,
       offset: const Offset(0, 36),
       itemBuilder: (_) => [
-        PopupMenuItem(
-          value: 'short',
-          child: Row(
-            children: [
-              Icon(
-                value == 'short' ? Icons.radio_button_checked : Icons.radio_button_off,
-                size: 16,
-                color: const Color(0xFF1A7A50),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                isEnglish ? 'Short vowels' : 'สระเสียงสั้น',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: value == 'short' ? FontWeight.w600 : FontWeight.normal,
-                  color: Colors.black87,
-                ),
-              ),
-            ],
-          ),
-        ),
-        PopupMenuItem(
-          value: 'long',
-          child: Row(
-            children: [
-              Icon(
-                value == 'long' ? Icons.radio_button_checked : Icons.radio_button_off,
-                size: 16,
-                color: const Color(0xFF1A7A50),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                isEnglish ? 'Long vowels' : 'สระเสียงยาว',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: value == 'long' ? FontWeight.w600 : FontWeight.normal,
-                  color: Colors.black87,
-                ),
-              ),
-            ],
-          ),
-        ),
+        if (includeAll) _item('all'),
+        _item('short'),
+        _item('long'),
       ],
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
