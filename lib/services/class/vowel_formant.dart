@@ -18,8 +18,8 @@ class VowelFormant {
   bool get hasRange => f1Min != null && f1Max != null && f2Min != null && f2Max != null;
 
   factory VowelFormant.fromJson(Map<String, dynamic> j) => VowelFormant(
-        f1: (j['f1'] as num).toDouble(),
-        f2: (j['f2'] as num).toDouble(),
+        f1: (j['f1'] as num?)?.toDouble() ?? 0.0,
+        f2: (j['f2'] as num?)?.toDouble() ?? 0.0,
         f1Min: (j['f1_min'] as num?)?.toDouble(),
         f1Max: (j['f1_max'] as num?)?.toDouble(),
         f2Min: (j['f2_min'] as num?)?.toDouble(),

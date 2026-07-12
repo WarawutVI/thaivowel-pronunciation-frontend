@@ -182,7 +182,9 @@ class _RecordingPageState extends State<RecordingPage> {
       VowelFormant? refFormant;
       try {
         refFormant = await PracticeApi.fetchVowelFormant(widget.vowelId);
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('fetchVowelFormant(${widget.vowelId}) failed: $e');
+      }
 
       PracticeApi.saveSession(
         firebaseUid: firebaseUid,
@@ -211,6 +213,18 @@ class _RecordingPageState extends State<RecordingPage> {
         _phase       = _Phase.idle;
       });
 
+      debugPrint('userF1=$_userF1 userF2=$_userF2 '
+          'ref=${_refFormant == null ? 'null' : '(f1=${_refFormant!.f1}, f2=${_refFormant!.f2}, '
+              'f1Min=${_refFormant!.f1Min}, f1Max=${_refFormant!.f1Max}, '
+              'f2Min=${_refFormant!.f2Min}, f2Max=${_refFormant!.f2Max})'}');
+
+      final suggestion = buildPronunciationSuggestion(
+        ref: _refFormant,
+        userF1: _userF1,
+        userF2: _userF2,
+        isEnglish: isEnglish,
+      );
+
       if (!mounted) return;
       showResultModal(
         context,
@@ -218,15 +232,10 @@ class _RecordingPageState extends State<RecordingPage> {
         confidence: _confidence,
         refSamples: _refSamples,
         userSamples: _userSamples,
-        suggestion: buildPronunciationSuggestion(
-          ref: _refFormant,
-          userF1: _userF1,
-          userF2: _userF2,
-          isEnglish: isEnglish,
-        ),
-        userF1: _userF1,
-        userF2: _userF2,
-        ref: _refFormant,
+        suggestion: suggestion.suggestion,
+        userF1: suggestion.userF1,
+        userF2: suggestion.userF2,
+        ref: suggestion.ref,
       );
     } catch (e) {
       if (!mounted) return;

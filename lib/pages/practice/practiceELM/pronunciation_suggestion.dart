@@ -1,12 +1,22 @@
 import 'package:frontend/services/practice_api.dart';
 
-String buildPronunciationSuggestion({
+typedef PronunciationSuggestion = ({
+  String suggestion,
+  VowelFormant? ref,
+  double userF1,
+  double userF2,
+});
+
+PronunciationSuggestion buildPronunciationSuggestion({
   required VowelFormant? ref,
   required double userF1,
   required double userF2,
   required bool isEnglish,
 }) {
-  if (ref == null || (userF1 == 0 && userF2 == 0)) return '';
+  if (ref == null || (userF1 == 0 && userF2 == 0)) {
+    return (suggestion: '', ref: ref, userF1: userF1, userF2: userF2);
+  }
+
   final List<String> partsEn = [];
   final List<String> partsTh = [];
   if (ref.hasRange) {
@@ -49,12 +59,13 @@ String buildPronunciationSuggestion({
     }
   }
 
-  if (partsEn.isEmpty) {
-    return isEnglish
-        ? 'Try to match the sample audio more closely.'
-        : 'ลองออกเสียงให้ใกล้เคียงกับเสียงตัวอย่างมากขึ้นนะ';
-  }
-  return isEnglish
-      ? 'Try ${partsEn.join(', ')}.'
-      : 'ลอง${partsTh.join(' ')}';
+  final suggestionText = partsEn.isEmpty
+      ? (isEnglish
+          ? 'Try to match the sample audio more closely.'
+          : 'ลองออกเสียงให้ใกล้เคียงกับเสียงตัวอย่างมากขึ้นนะ')
+      : (isEnglish
+          ? 'Try ${partsEn.join(', ')}.'
+          : 'ลอง${partsTh.join(' ')}');
+
+  return (suggestion: suggestionText, ref: ref, userF1: userF1, userF2: userF2);
 }

@@ -17,6 +17,7 @@ void showResultModal(
   String t(String en, String th) => isEnglish ? en : th;
   final passed = confidence >= 0.51;
   final level = assessmentLabel(confidence, isEnglish);
+  final assessImage = _assessImagePath(confidence);
 
   showDialog(
     context: context,
@@ -41,6 +42,10 @@ void showResultModal(
                     ),
                   ),
                 ),
+                const SizedBox(height: 12),
+                Center(
+                  child: Image.asset(assessImage, height: 150),
+                ),
                 const SizedBox(height: 16),
                 ClipRRect(
                   borderRadius: BorderRadius.circular(16),
@@ -62,8 +67,8 @@ void showResultModal(
                 Center(
                   child: Text(
                     t(
-                      'similarity ${(confidence * 100).toStringAsFixed(0)}%',
-                      'ความคล้ายคลึงกัน ${(confidence * 100).toStringAsFixed(0)}%',
+                      'accuracy ${(confidence * 100).toStringAsFixed(0)}%',
+                      'ความถูกต้อง ${(confidence * 100).toStringAsFixed(0)}%',
                     ),
                     style: const TextStyle(
                       fontSize: 18,
@@ -72,51 +77,35 @@ void showResultModal(
                     ),
                   ),
                 ),
-                if (ref != null) ...[
-                  const SizedBox(height: 14),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _FormantStat(
-                        label: 'F1',
-                        userValue: userF1,
-                        target: ref.hasRange
-                            ? '${ref.f1Min!.round()}-${ref.f1Max!.round()}'
-                            : '${ref.f1.round()}',
-                        isEnglish: isEnglish,
-                      ),
-                      _FormantStat(
-                        label: 'F2',
-                        userValue: userF2,
-                        target: ref.hasRange
-                            ? '${ref.f2Min!.round()}-${ref.f2Max!.round()}'
-                            : '${ref.f2.round()}',
-                        isEnglish: isEnglish,
-                      ),
-                    ],
-                  ),
-                ],
                 if (suggestion.isNotEmpty && !passed) ...[
                   const SizedBox(height: 14),
-                  RichText(
-                    text: TextSpan(
-                      children: [
-                        TextSpan(
-                          text: '${t('suggestion', 'คำแนะนำ')} : ',
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87,
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE8F5EE),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: RichText(
+                      text: TextSpan(
+                        children: [
+                          TextSpan(
+                            text: '${t('suggestion', 'คำแนะนำ')} : ',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF1A7A50),
+                            ),
                           ),
-                        ),
-                        TextSpan(
-                          text: suggestion,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: Colors.black87,
+                          TextSpan(
+                            text: suggestion,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.black87,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ],
@@ -172,6 +161,16 @@ void showResultModal(
       ),
     ),
   );
+}
+
+/// Maps a 0–1 confidence value to its assessment illustration, using the
+/// same tier thresholds as [assessmentLabel]/[accuracyColor].
+String _assessImagePath(double confidence) {
+  final pct = (confidence * 100).round();
+  if (pct >= 81) return 'assets/assess/Excellent.png';
+  if (pct >= 51) return 'assets/assess/Good.png';
+  if (pct >= 30) return 'assets/assess/Improvement.png';
+  return 'assets/assess/Incorrect.png';
 }
 
 class _FormantStat extends StatelessWidget {
