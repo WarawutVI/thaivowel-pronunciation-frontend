@@ -6,15 +6,9 @@ String buildPronunciationSuggestion({
   required double userF2,
   required bool isEnglish,
 }) {
-  if (ref == null || (userF1 == 0 && userF2 == 0)) {
-    return isEnglish
-        ? "We couldn't hear you clearly. Try recording again, speaking clearly into the mic."
-        : 'เราฟังเสียงคุณไม่ชัดเจน ลองบันทึกใหม่อีกครั้ง พูดให้ชัดเจนเข้าไมโครโฟนนะ';
-  }
-
+  if (ref == null || (userF1 == 0 && userF2 == 0)) return '';
   final List<String> partsEn = [];
   final List<String> partsTh = [];
-
   if (ref.hasRange) {
    
     if (userF1 < ref.f1Min!) {

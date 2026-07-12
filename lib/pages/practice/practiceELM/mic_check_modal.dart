@@ -27,8 +27,8 @@ class _MicCheckDialog extends StatefulWidget {
 }
 
 class _MicCheckDialogState extends State<_MicCheckDialog> {
-  // ---- Threshold (dBFS) — from training-set percentile analysis ----
-  static const double _quietThresholdDb = -23.0; // below this: too quiet
+  
+  static const double _quietThresholdDb = -30.0; // below this: too quiet
 
   static const int _checkDurationSeconds = 3;
 
