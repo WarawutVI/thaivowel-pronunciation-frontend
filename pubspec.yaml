@@ -34,7 +34,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/picture/
-    - assets/picture/flags/
+    
     - assets/lessons/
     - assets/lessons/slide/
 

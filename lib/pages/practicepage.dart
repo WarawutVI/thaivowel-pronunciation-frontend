@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/pages/practice/practiceELM/mic_check_modal.dart';
 import 'package:frontend/pages/practice/vowel_grid_page.dart';
 import 'package:frontend/services/language_controller.dart';
 import 'package:get/get.dart';
@@ -130,6 +131,29 @@ class _PracticepageState extends State<Practicepage> {
             color: const Color(0xFFE05C6A),
             cardColor: const Color(0xFFFFB3BA),
             onTap: () => Get.to(() => const VowelGridPage(type: 'short')),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            child: SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () => showMicCheckModal(context, isEnglish: isEnglish),
+                icon: const Icon(Icons.mic, color: Color(0xFF1A7A50)),
+                label: Text(
+                  t('Check your microphone', 'เช็คไมโครโฟนของคุณ'),
+                  style: const TextStyle(
+                    color: Color(0xFF1A7A50),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: Color(0xFF1A7A50)),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14)),
+                ),
+              ),
+            ),
           ),
         ],
       ),

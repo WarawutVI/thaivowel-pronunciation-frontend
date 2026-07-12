@@ -12,22 +12,21 @@ String buildPronunciationSuggestion({
   final List<String> partsTh = [];
 
   if (ref.hasRange) {
-    // Within the vowel's known F1/F2 range = a correct pronunciation
-    // variant, so no suggestion is needed for that axis.
+   
     if (userF1 < ref.f1Min!) {
       partsEn.add('closing your mouth slightly');
-      partsTh.add('ลองหุบปากลงอีกนิดนะ');
+      partsTh.add('อ้าปากลดลงอีกนิดนะ');
     } else if (userF1 > ref.f1Max!) {
       partsEn.add('opening your mouth wider');
-      partsTh.add('ลองอ้าปากให้กว้างขึ้นอีกนิดนะ ');
+      partsTh.add('อ้าปากให้กว้างขึ้นอีกนิดนะ ');
     }
 
     if (userF2 > ref.f2Max!) {
       partsEn.add('moving your tongue slightly back');
-      partsTh.add('ลองขยับลิ้นถอยไปด้านหลังอีกนิดนะ');
+      partsTh.add('ขยับลิ้นถอยไปด้านหลังอีกนิดนะ');
     } else if (userF2 < ref.f2Min!) {
       partsEn.add('moving your tongue slightly forward');
-      partsTh.add('ลองขยับลิ้นมาด้านหน้าอีกนิดนะ');
+      partsTh.add('ขยับลิ้นมาด้านหน้าอีกนิดนะ');
     }
   } else {
     final f1Diff = userF1 - ref.f1;
@@ -37,18 +36,18 @@ String buildPronunciationSuggestion({
 
     if (f1Diff > f1Threshold) {
       partsEn.add('closing your mouth slightly');
-      partsTh.add('ลองหุบปากลงอีกนิดนะ');
+      partsTh.add('หุบปากลงอีกนิดนะ');
     } else if (f1Diff < -f1Threshold) {
       partsEn.add('opening your mouth wider ');
-      partsTh.add('ลองอ้าปากให้กว้างขึ้นอีกนิดนะ ');
+      partsTh.add('อ้าปากให้กว้างขึ้นอีกนิดนะ ');
     }
 
     if (f2Diff > f2Threshold) {
       partsEn.add('moving your tongue slightly back ');
-      partsTh.add('ลองขยับลิ้นถอยไปด้านหลังอีกนิดนะ ');
+      partsTh.add('ขยับลิ้นถอยไปด้านหลังอีกนิดนะ ');
     } else if (f2Diff < -f2Threshold) {
       partsEn.add('moving your tongue slightly forward ');
-      partsTh.add('ลองขยับลิ้นมาด้านหน้าอีกนิดนะ ');
+      partsTh.add('ขยับลิ้นมาด้านหน้าอีกนิดนะ ');
     }
   }
 

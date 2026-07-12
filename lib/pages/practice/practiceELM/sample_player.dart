@@ -12,19 +12,28 @@ class SamplePlayer {
     });
   }
 
-  Future<void> toggle(String assetPath, {required VoidCallback onError}) async {
+  static const _extensions = ['wav', 'm4a'];
+
+  /// [basePath] should omit the file extension — each candidate in
+  /// [_extensions] is tried in turn, since sample files aren't all the
+  /// same format.
+  Future<void> toggle(String basePath, {required VoidCallback onError}) async {
     if (isPlaying) {
       await _player.stop();
       isPlaying = false;
       return;
     }
-    try {
-      isPlaying = true;
-      await _player.play(AssetSource(assetPath));
-    } catch (_) {
-      isPlaying = false;
-      onError();
+    isPlaying = true;
+    for (final ext in _extensions) {
+      try {
+        await _player.play(AssetSource('$basePath.$ext'));
+        return;
+      } catch (_) {
+        // Try the next extension.
+      }
     }
+    isPlaying = false;
+    onError();
   }
 
   void dispose() => _player.dispose();

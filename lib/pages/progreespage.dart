@@ -143,6 +143,14 @@ class _ProgreespageState extends State<Progreespage> {
             ),
             const SizedBox(height: 16),
 
+               // 3 — Long vs short accuracy donuts
+            AvgAccuracyDonuts(
+              longAvg: _summary!.longAvgAccuracy,
+              shortAvg: _summary!.shortAvgAccuracy,
+              isEnglish: isEnglish,
+            ),
+            const SizedBox(height: 16),
+
             // 2 — Practice count bar chart
             PracticeCountChart(
               stats: _barStats,
@@ -152,13 +160,7 @@ class _ProgreespageState extends State<Progreespage> {
             ),
             const SizedBox(height: 16),
 
-            // 3 — Long vs short accuracy donuts
-            AvgAccuracyDonuts(
-              longAvg: _summary!.longAvgAccuracy,
-              shortAvg: _summary!.shortAvgAccuracy,
-              isEnglish: isEnglish,
-            ),
-            const SizedBox(height: 16),
+         
 
             // 4 — Accuracy trend (self-contained: fetches its own data)
             TrendCard(

@@ -6,6 +6,8 @@ class IdleView extends StatelessWidget {
   final bool isEnglish;
   final int recordSeconds;
   final VoidCallback onBeginFlow;
+  final bool isPlayingSample;
+  final VoidCallback onToggleSample;
 
   const IdleView({
     super.key,
@@ -14,6 +16,8 @@ class IdleView extends StatelessWidget {
     required this.isEnglish,
     required this.recordSeconds,
     required this.onBeginFlow,
+    required this.isPlayingSample,
+    required this.onToggleSample,
   });
 
   String t(String en, String th) => isEnglish ? en : th;
@@ -37,11 +41,38 @@ class IdleView extends StatelessWidget {
             wordIpa!,
             style: const TextStyle(fontSize: 30, color: Colors.black45),
           ),
+        const SizedBox(height: 8),
+        GestureDetector(
+          onTap: onToggleSample,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                t('Tap to hear sample audio', 'กดเพื่อฟังเสียงตัวอย่าง'),
+                style: const TextStyle(fontSize: 12, color: Colors.black54),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1A7A50),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  isPlayingSample ? Icons.stop : Icons.volume_up,
+                  color: Colors.white,
+                  size: 22,
+                ),
+              ),
+            ],
+          ),
+        ),
         const SizedBox(height: 16),
         Text(
           t(
-            'Press the mic and speak for $recordSeconds seconds.',
-            'กดไมค์แล้วพูด $recordSeconds วินาที',
+            'Tap the microphone and speak once within $recordSeconds seconds.',
+            'กดไมค์แล้วพูด 1 ครั้งภายใน $recordSeconds วินาที',
           ),
           textAlign: TextAlign.center,
           style: const TextStyle(fontSize: 20, color: Colors.black54),

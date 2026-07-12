@@ -243,7 +243,7 @@ class _LoginState extends State<Login> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      
+
                       LanguageToggleButton(
                         isEnglish: isEnglish,
                         onChanged: (v) => setState(() => isEnglish = v),

@@ -74,6 +74,8 @@ class LanguageToggleButton extends StatelessWidget {
                 isEnglish ? 'EN' : 'TH',
                 style: const TextStyle(color: Colors.white, fontSize: 14),
               ),
+              const Icon(Icons.keyboard_arrow_down,
+                  size: 16, color: Colors.white),
             ],
           ),
         ),
@@ -86,16 +88,23 @@ class LanguageToggleButton extends StatelessWidget {
       itemBuilder: (_) => _items(),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(4),
-          child: Image.asset(
-            isEnglish
-                ? 'assets/picture/usa_flag.png'
-                : 'assets/picture/th_flag.jpg',
-            width: 28,
-            height: 20,
-            fit: BoxFit.cover,
-          ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: Image.asset(
+                isEnglish
+                    ? 'assets/picture/usa_flag.png'
+                    : 'assets/picture/th_flag.jpg',
+                width: 28,
+                height: 20,
+                fit: BoxFit.cover,
+              ),
+            ),
+            const Icon(Icons.keyboard_arrow_down,
+                size: 18, color: Colors.black54),
+          ],
         ),
       ),
     );

@@ -60,14 +60,16 @@ class _HomepageState extends State<Homepage> {
   Widget _buildStreakBanner() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          color: const Color(0xFF1A7A50),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Row(
-          children: [
+      child: GestureDetector(
+        onTap: () => Get.to(() => const Progreespage()),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: const Color(0xFF1A7A50),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Row(
+            children: [
             Container(
               width: 80,
               height: 80,
@@ -101,7 +103,7 @@ class _HomepageState extends State<Homepage> {
                     t('$_currentStreak days ', ' $_currentStreak วัน'),
                     style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 40,
+                      fontSize: 30,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -131,6 +133,7 @@ class _HomepageState extends State<Homepage> {
               ),
             ),
           ],
+          ),
         ),
       ),
     );
@@ -174,7 +177,7 @@ class _HomepageState extends State<Homepage> {
                     title,
                     style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 25,
+                      fontSize: 30,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -183,7 +186,7 @@ class _HomepageState extends State<Homepage> {
                     subtitle,
                     style: const TextStyle(
                       color: Colors.white70,
-                      fontSize: 13,
+                      fontSize: 16,
                     ),
                   ),
                 ],
@@ -191,7 +194,7 @@ class _HomepageState extends State<Homepage> {
             ),
             const Padding(
               padding: EdgeInsets.only(right: 16),
-              child: Icon(Icons.chevron_right, color: Colors.white, size: 28),
+              child: Icon(Icons.chevron_right, color: Colors.white, size: 50),
             ),
           ],
         ),
@@ -238,20 +241,21 @@ class _HomepageState extends State<Homepage> {
             const SizedBox(height: 8),
             _buildStreakBanner(),
             const SizedBox(height: 8),
-            _buildCard(
-              title: t('Practice', 'ฝึกพูด'),
-              subtitle: t('Record your vowels', 'บันทึกเสียงสระของคุณ'),
-              color: const Color(0xFFFF828D),
-              imagePath: 'assets/picture/practice.png',
-              onTap: () => Get.to(() => const Practicepage()),
-            ),
-            _buildCard(
+             _buildCard(
               title: t('Lessons', 'บทเรียน'),
               subtitle: t('Learn the basics', 'เรียนรู้พื้นฐาน'),
               color: const Color(0xFFC695FE),
               imagePath: 'assets/picture/lessons.png',
               onTap: () => Get.to(() => const Lessonspage()),
             ),
+            _buildCard(
+              title: t('Practice', 'ฝึกพูด'),
+              subtitle: t('Record your vowels', 'บันทึกเสียงสระของคุณ'),
+              color: const Color.fromARGB(255, 80, 160, 214),
+              imagePath: 'assets/picture/practice.png',
+              onTap: () => Get.to(() => const Practicepage()),
+            ),
+          
             _buildCard(
               title: t('Your Progress', 'ความก้าวหน้า'),
               subtitle: t('See your stats', 'ดูสถิติของคุณ'),

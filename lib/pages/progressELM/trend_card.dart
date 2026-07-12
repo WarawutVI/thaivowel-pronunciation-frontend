@@ -127,7 +127,7 @@ class _TrendCardState extends State<TrendCard> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
-          t('Accuracy Trend', 'แนวโน้มความแม่นยำ'),
+          t('Accuracy Trend', 'แนวโน้มความถูกต้อง'),
           style: const TextStyle(
               fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87),
         ),

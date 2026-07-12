@@ -87,7 +87,7 @@ class _RecordingPageState extends State<RecordingPage> {
 
   Future<void> _toggleSample() {
     return _samplePlayer.toggle(
-      'samples/${widget.vowelId}/${widget.lessonOrder}.wav',
+      'samples/${widget.vowelId}/${widget.lessonOrder}',
       onError: () => Get.snackbar(
         t('Error', 'เกิดข้อผิดพลาด'),
         t('Sample audio not available', 'ไม่มีเสียงตัวอย่าง'),
@@ -254,62 +254,39 @@ class _RecordingPageState extends State<RecordingPage> {
               color: Colors.black87, fontWeight: FontWeight.bold),
         ),
       ),
-      body: Stack(
-        children: [
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 300),
-                child: switch (_phase) {
-                  _Phase.idle => IdleView(
-                      word: widget.word,
-                      wordIpa: widget.wordIpa,
-                      isEnglish: isEnglish,
-                      recordSeconds: _recordSeconds,
-                      onBeginFlow: _beginFlow,
-                    ),
-                  _Phase.getReady => GetReadyView(
-                      word: widget.word,
-                      wordIpa: widget.wordIpa,
-                      isEnglish: isEnglish,
-                      readyCountdown: _readyCountdown,
-                      getReadySeconds: _getReadySeconds,
-                    ),
-                  _Phase.recording => RecordingView(
-                      word: widget.word,
-                      wordIpa: widget.wordIpa,
-                      isEnglish: isEnglish,
-                      remainingSeconds: _remainingSeconds,
-                      recordSeconds: _recordSeconds,
-                    ),
-                  _Phase.analyzing => AnalyzingView(isEnglish: isEnglish),
-                },
-              ),
-            ),
-          ),
-          if (_phase == _Phase.idle)
-            Positioned(
-              top: 12,
-              right: 12,
-              child: GestureDetector(
-                onTap: _toggleSample,
-                child: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF1A7A50),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(
-                    _samplePlayer.isPlaying ? Icons.stop : Icons.volume_up,
-                    color: Colors.white,
-                    size: 22,
-                  ),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 300),
+            child: switch (_phase) {
+              _Phase.idle => IdleView(
+                  word: widget.word,
+                  wordIpa: widget.wordIpa,
+                  isEnglish: isEnglish,
+                  recordSeconds: _recordSeconds,
+                  onBeginFlow: _beginFlow,
+                  isPlayingSample: _samplePlayer.isPlaying,
+                  onToggleSample: _toggleSample,
                 ),
-              ),
-            ),
-        ],
+              _Phase.getReady => GetReadyView(
+                  word: widget.word,
+                  wordIpa: widget.wordIpa,
+                  isEnglish: isEnglish,
+                  readyCountdown: _readyCountdown,
+                  getReadySeconds: _getReadySeconds,
+                ),
+              _Phase.recording => RecordingView(
+                  word: widget.word,
+                  wordIpa: widget.wordIpa,
+                  isEnglish: isEnglish,
+                  remainingSeconds: _remainingSeconds,
+                  recordSeconds: _recordSeconds,
+                ),
+              _Phase.analyzing => AnalyzingView(isEnglish: isEnglish),
+            },
+          ),
+        ),
       ),
     );
   }

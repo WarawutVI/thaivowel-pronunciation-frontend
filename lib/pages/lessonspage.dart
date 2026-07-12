@@ -95,7 +95,7 @@ class _LessonspageState extends State<Lessonspage> {
                         style: const TextStyle(
                           fontSize: 15,
                           fontStyle: FontStyle.italic,
-                          color: Colors.black45,
+                          color: Colors.black87,
                         ),
                       ),
                       const SizedBox(height: 12),
