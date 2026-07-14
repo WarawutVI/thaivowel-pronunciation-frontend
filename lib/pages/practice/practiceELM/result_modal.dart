@@ -18,6 +18,7 @@ void showResultModal(
   final passed = confidence >= 0.51;
   final level = assessmentLabel(confidence, isEnglish);
   final assessImage = _assessImagePath(confidence);
+  final assessCaption = _assessCaption(confidence, isEnglish);
 
   showDialog(
     context: context,
@@ -45,6 +46,18 @@ void showResultModal(
                 const SizedBox(height: 12),
                 Center(
                   child: Image.asset(assessImage, height: 150),
+                ),
+                const SizedBox(height: 8),
+                Center(
+                  child: Text(
+                    assessCaption,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: accuracyColor(confidence),
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 16),
                 ClipRRect(
@@ -171,6 +184,22 @@ String _assessImagePath(double confidence) {
   if (pct >= 51) return 'assets/assess/Good.png';
   if (pct >= 30) return 'assets/assess/Improvement.png';
   return 'assets/assess/Incorrect.png';
+}
+
+/// Maps a 0–1 confidence value to its assessment caption, using the same
+/// tier thresholds as [assessmentLabel]/[accuracyColor]/[_assessImagePath].
+String _assessCaption(double confidence, bool isEnglish) {
+  final pct = (confidence * 100).round();
+  if (pct >= 81) {
+    return isEnglish ? 'Fantastic Pronunciation' : 'เก่งสุดๆไปเลย';
+  }
+  if (pct >= 51) {
+    return isEnglish ? 'Well Done!' : 'เก่งมากเลย!';
+  }
+  if (pct >= 30) {
+    return isEnglish ? "You're Almost There!" : 'พยายามอีกนิดนะ!';
+  }
+  return isEnglish ? 'Try Again!' : 'ลองใหม่อีกครั้งนะ!';
 }
 
 class _FormantStat extends StatelessWidget {

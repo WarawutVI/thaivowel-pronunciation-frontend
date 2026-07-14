@@ -86,19 +86,19 @@ class _LessonspageState extends State<Lessonspage> {
                       _TongueSection(isEnglish: isEnglish),
                       const SizedBox(height: 24),
                       _TongueHeightSection(isEnglish: isEnglish),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 50),
                       Text(
                         t(
                           'Want to know how to pronounce a vowel? Tap on it.',
                           'หากต้องการทราบวิธีออกเสียงสระ ให้กดที่สระนั้น',
                         ),
                         style: const TextStyle(
-                          fontSize: 15,
+                          fontSize: 20,
                           fontStyle: FontStyle.italic,
                           color: Colors.black87,
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 15),
                       _VowelSection(
                         title: t('Long Vowels', 'สระเสียงยาว'),
                         vowels: longVowels,

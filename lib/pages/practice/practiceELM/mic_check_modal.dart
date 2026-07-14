@@ -28,7 +28,7 @@ class _MicCheckDialog extends StatefulWidget {
 
 class _MicCheckDialogState extends State<_MicCheckDialog> {
   
-  static const double _quietThresholdDb = -30.0; // below this: too quiet
+  static const double _quietThresholdDb = -35.0; // below this: too quiet
 
   static const int _checkDurationSeconds = 3;
 
@@ -114,8 +114,8 @@ class _MicCheckDialogState extends State<_MicCheckDialog> {
     switch (_status) {
       case MicCheckStatus.idle:
         return t(
-          'Press the mic and say "ah" briefly\nto check your volume before practicing',
-          'กดปุ่มไมค์แล้วพูดคำว่า "อา" สั้นๆ\nเพื่อเช็คระดับเสียงก่อนเริ่มฝึก',
+          'Press the mic and say "ah" \nto check your volume before practicing',
+          'กดปุ่มไมค์แล้วพูดคำว่า "อา" \nเพื่อเช็คระดับเสียงก่อนเริ่มฝึก',
         );
       case MicCheckStatus.recording:
         return t(
@@ -124,7 +124,7 @@ class _MicCheckDialogState extends State<_MicCheckDialog> {
         );
       case MicCheckStatus.tooQuiet:
         return t(
-          'A bit too quiet 🔉\nTry moving the mic closer to your mouth',
+          'Your sound is quiet 🔉\nTry moving the mic closer to your mouth',
           'เสียงเบาไปหน่อยนะ 🔉\nลองขยับไมค์เข้ามาใกล้ปากอีกนิด',
         );
       case MicCheckStatus.good:
