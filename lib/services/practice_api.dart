@@ -5,6 +5,7 @@ import 'package:frontend/services/class/lesson_progress.dart';
 import 'package:frontend/services/class/predict_result.dart';
 import 'package:frontend/services/class/progress_summary.dart';
 import 'package:frontend/services/class/session_record.dart';
+import 'package:frontend/services/class/user_profile.dart';
 import 'package:frontend/services/class/user_streak.dart';
 import 'package:frontend/services/class/vowel_detail.dart';
 import 'package:frontend/services/class/vowel_formant.dart';
@@ -17,6 +18,7 @@ export 'package:frontend/services/class/lesson_progress.dart';
 export 'package:frontend/services/class/predict_result.dart';
 export 'package:frontend/services/class/progress_summary.dart';
 export 'package:frontend/services/class/session_record.dart';
+export 'package:frontend/services/class/user_profile.dart';
 export 'package:frontend/services/class/user_streak.dart';
 export 'package:frontend/services/class/vowel_detail.dart';
 export 'package:frontend/services/class/vowel_formant.dart';
@@ -63,6 +65,15 @@ class PracticeApi {
     if (res.statusCode != 201 && res.statusCode != 409) {
       throw Exception('Failed to create user: ${res.statusCode}');
     }
+  }
+
+  // GET /users?firebase_uid=X
+  static Future<UserProfile> fetchUser(String firebaseUid) async {
+    final uri = Uri.parse('$_base/users')
+        .replace(queryParameters: {'firebase_uid': firebaseUid});
+    final res = await http.get(uri, headers: _headers);
+    if (res.statusCode != 200) throw Exception('Failed to load user');
+    return UserProfile.fromJson(jsonDecode(res.body) as Map<String, dynamic>);
   }
 
   // GET /vowels?type=short|long&firebase_uid=X

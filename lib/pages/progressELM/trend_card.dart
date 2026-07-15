@@ -66,11 +66,13 @@ class _TrendCardState extends State<TrendCard> {
             : null,
         end: isQuarter ? DateFormat('yyyy-MM-dd').format(now) : null,
       );
+      if (!mounted) return;
       setState(() {
         _trendData = data;
         _loading   = false;
       });
     } catch (_) {
+      if (!mounted) return;
       setState(() => _loading = false);
     }
   }

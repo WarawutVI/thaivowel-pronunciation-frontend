@@ -35,8 +35,10 @@ class _AllHistoryPageState extends State<AllHistoryPage> {
     setState(() { _loading = true; _error = null; });
     try {
       final data = await PracticeApi.fetchRecentSessions(_uid, limit: 1000);
+      if (!mounted) return;
       setState(() { _sessions = data; _loading = false; });
     } catch (e) {
+      if (!mounted) return;
       setState(() { _error = e.toString(); _loading = false; });
     }
   }

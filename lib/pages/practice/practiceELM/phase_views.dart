@@ -49,7 +49,7 @@ class IdleView extends StatelessWidget {
             children: [
               Text(
                 t('Tap to hear sample audio', 'กดเพื่อฟังเสียงตัวอย่าง'),
-                style: const TextStyle(fontSize: 12, color: Colors.black54),
+                style: const TextStyle(fontSize: 15, color: Colors.black54),
               ),
               const SizedBox(width: 8),
               Container(

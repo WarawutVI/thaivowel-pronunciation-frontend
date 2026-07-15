@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/services/language_controller.dart';
 import 'package:frontend/wrapper.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'firebase_options.dart';
 
 
@@ -20,9 +21,13 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1A7A50)),
+        textTheme: GoogleFonts.baloo2TextTheme().apply(
+          fontFamilyFallback: [GoogleFonts.mali().fontFamily!],
+        ),
       ),
       home:  Wrapper(),
     );

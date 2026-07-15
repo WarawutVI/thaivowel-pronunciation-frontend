@@ -252,14 +252,28 @@ class _LoginState extends State<Login> {
                     ],
                   ),
                   const SizedBox(height: 24),
-                  Text(
-                    t('Welcome\nback! 👋', 'ยินดี\nต้อนรับ! 👋'),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 36,
-                      fontWeight: FontWeight.bold,
-                      height: 1.2,
-                    ),
+                  Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Positioned(
+                        top: -50,
+                        right: -485,
+                        child: Image.asset(
+                          'assets/picture/login.png',
+                          height: 250,
+                          width: 700,
+                        ),
+                      ),
+                      Text(
+                        t('Welcome 👋', 'ยินดี\nต้อนรับ! 👋'),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 36,
+                          fontWeight: FontWeight.bold,
+                          height: 1.2,
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 8),
                   Text(

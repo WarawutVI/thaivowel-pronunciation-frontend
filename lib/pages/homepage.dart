@@ -15,15 +15,22 @@ class Homepage extends StatefulWidget {
   State<Homepage> createState() => _HomepageState();
 }
 
-class _HomepageState extends State<Homepage> {
+class _HomepageState extends State<Homepage> with SingleTickerProviderStateMixin {
   bool isEnglish = true;
   int _currentStreak = 0;
   int _longestStreak = 0;
+  String? _dbUsername;
+
+  late final AnimationController _fireController;
+  late final Animation<double> _fireOffset;
 
   String get _uid => FirebaseAuth.instance.currentUser!.uid;
   String t(String en, String th) => isEnglish ? en : th;
 
   String get _userName {
+    if (_dbUsername != null && _dbUsername!.trim().isNotEmpty) {
+      return _dbUsername!.trim().split(' ')[0];
+    }
     final user = FirebaseAuth.instance.currentUser;
     final displayName = user?.displayName?.trim();
     if (displayName != null && displayName.isNotEmpty) {
@@ -41,11 +48,34 @@ class _HomepageState extends State<Homepage> {
     super.initState();
     isEnglish = Get.find<LanguageController>().isEnglish;
     _loadStreak();
+    _loadUser();
+
+    _fireController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    )..repeat(reverse: true);
+    _fireOffset = Tween<double>(begin: 0, end: 8).animate(
+      CurvedAnimation(parent: _fireController, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _fireController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadUser() async {
+    try {
+      final profile = await PracticeApi.fetchUser(_uid);
+      if (mounted) setState(() => _dbUsername = profile.username);
+    } catch (_) {}
   }
 
   Future<void> _loadStreak() async {
     try {
       final s = await PracticeApi.fetchStreak(_uid);
+      if (!mounted) return;
       setState(() {
         _currentStreak = s.currentStreak;
         _longestStreak = s.longestStreak;
@@ -77,8 +107,15 @@ class _HomepageState extends State<Homepage> {
                 color: Colors.white.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Center(
-                child: Text('🔥', style: TextStyle(fontSize: 50)),
+              child: Center(
+                child: AnimatedBuilder(
+                  animation: _fireOffset,
+                  builder: (context, child) => Transform.translate(
+                    offset: Offset(0, _fireOffset.value),
+                    child: child,
+                  ),
+                  child: const Text('🔥', style: TextStyle(fontSize: 50)),
+                ),
               ),
             ),
             const SizedBox(width: 10),
@@ -263,22 +300,11 @@ class _HomepageState extends State<Homepage> {
               imagePath: 'assets/picture/yourprogress.png',
               onTap: () => Get.to(() => const Progreespage()),
             ),
-            const SizedBox(height: 24),
-            // Center(
-            //   child: Text(
-            //     t('Have Fun with Thai Vowels', 'สนุกกับสระภาษาไทย'),
-            //     style: const TextStyle(
-            //       fontSize: 16,
-            //       fontWeight: FontWeight.bold,
-            //       color: Colors.black87,
-            //     ),
-            //   ),
-            // ),
-            const SizedBox(height: 3),
+            // const SizedBox(height: 10),
             Center(
               child: Image.asset(
                 'assets/picture/iconpracticepage.png',
-                height: 150,
+                height: 200,
               ),
             ),
           ],
