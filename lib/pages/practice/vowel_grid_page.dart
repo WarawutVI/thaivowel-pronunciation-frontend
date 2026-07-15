@@ -34,11 +34,13 @@ class _VowelGridPageState extends State<VowelGridPage> {
   Future<void> _load() async {
     try {
       final data = await PracticeApi.fetchVowels(firebaseUid, widget.type);
+      if (!mounted) return;
       setState(() {
         vowels = data;
         loading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         error = e.toString();
         loading = false;
@@ -208,6 +210,7 @@ class _VowelGridPageState extends State<VowelGridPage> {
                                       isEnglish: isEnglish,
                                     ));
                                 // Reload after returning to refresh progress
+                                if (!mounted) return;
                                 setState(() => loading = true);
                                 _load();
                               },

@@ -47,12 +47,14 @@ class _WordGridPageState extends State<WordGridPage> {
   Future<void> _load() async {
     try {
       final data = await PracticeApi.fetchLessons(firebaseUid, widget.vowelId);
+      if (!mounted) return;
       setState(() {
         _vowelLesson = data.where((l) => l.lessonOrder == 1).firstOrNull;
         _wordLessons = data.where((l) => l.lessonOrder != 1).toList();
         loading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         error = e.toString();
         loading = false;
@@ -70,6 +72,7 @@ class _WordGridPageState extends State<WordGridPage> {
           vowelSymbol: widget.vowelSymbol,
           isEnglish: isEnglish,
         ));
+    if (!mounted) return;
     setState(() => loading = true);
     _load();
   }

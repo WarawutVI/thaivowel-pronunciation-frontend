@@ -61,6 +61,7 @@ class _MicCheckDialogState extends State<_MicCheckDialog> {
     final directory = await getApplicationDocumentsDirectory();
     final path = '${directory.path}/mic_check.wav';
 
+    if (!mounted) return;
     setState(() {
       _status = MicCheckStatus.recording;
       _remainingSeconds = _checkDurationSeconds;
@@ -91,7 +92,7 @@ class _MicCheckDialogState extends State<_MicCheckDialog> {
       if (_remainingSeconds <= 1) {
         timer.cancel();
         await _finishCheck();
-      } else {
+      } else if (mounted) {
         setState(() => _remainingSeconds--);
       }
     });
@@ -107,6 +108,7 @@ class _MicCheckDialogState extends State<_MicCheckDialog> {
         ? MicCheckStatus.tooQuiet
         : MicCheckStatus.good;
 
+    if (!mounted) return;
     setState(() => _status = result);
   }
 

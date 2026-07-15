@@ -62,6 +62,7 @@ class _ProgreespageState extends State<Progreespage> {
         // whether a "Show more" link is needed.
         PracticeApi.fetchRecentSessions(_uid, limit: 6),
       ]);
+      if (!mounted) return;
       setState(() {
         _summary = results[0] as ProgressSummary;
         _streak = results[1] as UserStreak;
@@ -71,6 +72,7 @@ class _ProgreespageState extends State<Progreespage> {
         loading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         error = e.toString();
         loading = false;

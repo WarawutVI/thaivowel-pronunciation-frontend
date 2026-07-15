@@ -19,6 +19,7 @@ class _HomepageState extends State<Homepage> with SingleTickerProviderStateMixin
   bool isEnglish = true;
   int _currentStreak = 0;
   int _longestStreak = 0;
+  String? _dbUsername;
 
   late final AnimationController _fireController;
   late final Animation<double> _fireOffset;
@@ -27,6 +28,9 @@ class _HomepageState extends State<Homepage> with SingleTickerProviderStateMixin
   String t(String en, String th) => isEnglish ? en : th;
 
   String get _userName {
+    if (_dbUsername != null && _dbUsername!.trim().isNotEmpty) {
+      return _dbUsername!.trim().split(' ')[0];
+    }
     final user = FirebaseAuth.instance.currentUser;
     final displayName = user?.displayName?.trim();
     if (displayName != null && displayName.isNotEmpty) {
@@ -44,6 +48,7 @@ class _HomepageState extends State<Homepage> with SingleTickerProviderStateMixin
     super.initState();
     isEnglish = Get.find<LanguageController>().isEnglish;
     _loadStreak();
+    _loadUser();
 
     _fireController = AnimationController(
       vsync: this,
@@ -60,9 +65,17 @@ class _HomepageState extends State<Homepage> with SingleTickerProviderStateMixin
     super.dispose();
   }
 
+  Future<void> _loadUser() async {
+    try {
+      final profile = await PracticeApi.fetchUser(_uid);
+      if (mounted) setState(() => _dbUsername = profile.username);
+    } catch (_) {}
+  }
+
   Future<void> _loadStreak() async {
     try {
       final s = await PracticeApi.fetchStreak(_uid);
+      if (!mounted) return;
       setState(() {
         _currentStreak = s.currentStreak;
         _longestStreak = s.longestStreak;
@@ -287,9 +300,7 @@ class _HomepageState extends State<Homepage> with SingleTickerProviderStateMixin
               imagePath: 'assets/picture/yourprogress.png',
               onTap: () => Get.to(() => const Progreespage()),
             ),
-            const SizedBox(height: 24),
-           
-            const SizedBox(height: 3),
+            // const SizedBox(height: 10),
             Center(
               child: Image.asset(
                 'assets/picture/iconpracticepage.png',

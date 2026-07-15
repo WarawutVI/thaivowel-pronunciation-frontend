@@ -30,8 +30,10 @@ class _LessonspageState extends State<Lessonspage> {
     setState(() { loading = true; _error = null; });
     try {
       final data = await PracticeApi.fetchVowelDetails();
+      if (!mounted) return;
       setState(() { _vowels = data; loading = false; });
     } catch (e) {
+      if (!mounted) return;
       setState(() { _error = e.toString(); loading = false; });
     }
   }
