@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/services/practice_api.dart';
+import 'package:frontend/widgets/pronunciation_info_card.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 void showVowelInfoDialog(
@@ -114,40 +115,44 @@ class _VowelInfoDialogState extends State<_VowelInfoDialog> {
                   ),
                   if (_detail != null) ...[
                     const SizedBox(height: 14),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
+                    PronunciationInfoGrid(
+                      items: [
                         if ((widget.isEnglish
                                 ? _detail!.lipsEn
                                 : _detail!.lipsTh) !=
                             null)
-                          _Chip(
-                            label: t('Lips', 'ริมฝีปาก'),
-                            value: (widget.isEnglish
+                          MapEntry(
+                            t('Lip Shape', 'รูปปาก'),
+                            (widget.isEnglish
                                 ? _detail!.lipsEn
                                 : _detail!.lipsTh)!,
+                          ),
+                        if ((widget.isEnglish
+                                ? _detail!.tongueLevelEn
+                                : _detail!.tongueLevelTh) !=
+                            null)
+                          MapEntry(
+                            t('Tongue Height', 'ระดับลิ้น'),
+                            (widget.isEnglish
+                                ? _detail!.tongueLevelEn
+                                : _detail!.tongueLevelTh)!,
                           ),
                         if ((widget.isEnglish
                                 ? _detail!.tongueEn
                                 : _detail!.tongueTh) !=
                             null)
-                          _Chip(
-                            label: t('Tongue', 'ลิ้น'),
-                            value: (widget.isEnglish
+                          MapEntry(
+                            t('Tongue Part Used', 'ส่วนของลิ้นที่ใช้'),
+                            (widget.isEnglish
                                 ? _detail!.tongueEn
                                 : _detail!.tongueTh)!,
                           ),
-                        // if ((widget.isEnglish
-                        //         ? _detail!.jawEn
-                        //         : _detail!.jawTh) !=
-                        //     null)
-                        //   _Chip(
-                        //     label: t('Jaw', 'ขากรรไกร'),
-                        //     value: (widget.isEnglish
-                        //         ? _detail!.jawEn
-                        //         : _detail!.jawTh)!,
-                        //   ),
+                        MapEntry(
+                          t('Duration', 'ระยะเวลา'),
+                          _detail!.vowelType == 'long'
+                              ? t('Long', 'ยาว')
+                              : t('Short', 'สั้น'),
+                        ),
                       ],
                     ),
                   ],
@@ -182,42 +187,6 @@ class _VowelInfoDialogState extends State<_VowelInfoDialog> {
         ),
       ),
       builder: (_, player) => buildDialog(player),
-    );
-  }
-}
-
-class _Chip extends StatelessWidget {
-  final String label;
-  final String value;
-  const _Chip({required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: const Color(0xFFEEF8F3),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.black12),
-      ),
-      child: RichText(
-        text: TextSpan(
-          children: [
-            TextSpan(
-              text: '$label: ',
-              style: const TextStyle(fontSize: 12, color: Colors.black54),
-            ),
-            TextSpan(
-              text: value,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: Colors.black87,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

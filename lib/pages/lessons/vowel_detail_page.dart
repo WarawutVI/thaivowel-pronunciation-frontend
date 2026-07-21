@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/pages/lessons/lessonELM/info_chip.dart';
 import 'package:frontend/pages/practice/word_grid_page.dart';
 import 'package:frontend/services/language_controller.dart';
 import 'package:frontend/services/practice_api.dart';
+import 'package:frontend/widgets/pronunciation_info_card.dart';
 import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart'; 
@@ -173,29 +173,28 @@ class _VowelDetailPageState extends State<VowelDetailPage> {
                   ),
                 ),
                 const SizedBox(height: 14),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
+                PronunciationInfoGrid(
+                  items: [
                     if ((isEnglish ? vowel.lipsEn : vowel.lipsTh) != null)
-                      InfoChip(
-                        label: t('Lips', 'ริมฝีปาก'),
-                        value: (isEnglish ? vowel.lipsEn : vowel.lipsTh)!,
+                      MapEntry(
+                        t('Lip Shape', 'รูปปาก'),
+                        (isEnglish ? vowel.lipsEn : vowel.lipsTh)!,
+                      ),
+                    if ((isEnglish ? vowel.tongueLevelEn : vowel.tongueLevelTh) !=
+                        null)
+                      MapEntry(
+                        t('Tongue Height', 'ระดับลิ้น'),
+                        (isEnglish ? vowel.tongueLevelEn : vowel.tongueLevelTh)!,
                       ),
                     if ((isEnglish ? vowel.tongueEn : vowel.tongueTh) != null)
-                      InfoChip(
-                        label: t('Tongue', 'ลิ้น'),
-                        value: (isEnglish ? vowel.tongueEn : vowel.tongueTh)!,
+                      MapEntry(
+                        t('Tongue Part Used', 'ส่วนของลิ้นที่ใช้'),
+                        (isEnglish ? vowel.tongueEn : vowel.tongueTh)!,
                       ),
-                    // if ((isEnglish ? vowel.jawEn : vowel.jawTh) != null)
-                    //   _InfoChip(
-                    //     label: t('Jaw', 'ขากรรไกร'),
-                    //     value: (isEnglish ? vowel.jawEn : vowel.jawTh)!,
-                    //   ),
-                    // _InfoChip(
-                    //   label: t('Duration', 'ระยะเวลา'),
-                    //   value: isLong ? t('Long', 'ยาว') : t('Short', 'สั้น'),
-                    // ),
+                    MapEntry(
+                      t('Duration', 'ระยะเวลา'),
+                      isLong ? t('Long', 'ยาว') : t('Short', 'สั้น'),
+                    ),
                   ],
                 ),
               ],

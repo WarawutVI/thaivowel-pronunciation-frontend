@@ -243,9 +243,8 @@ class _TongueHeightSection extends StatefulWidget {
 class _TongueHeightSectionState extends State<_TongueHeightSection> {
   static const _levels = [
     (image: 1, en: 'High', th: 'สูง'),
-    (image: 2, en: 'Semi-high', th: 'กึ่งสูง'),
-    (image: 3, en: 'Semi-low', th: 'กึ่งต่ำ'),
-    (image: 4, en: 'Low', th: 'ต่ำ'),
+    (image: 2, en: 'Middle', th: 'กึ่งกลาง'),
+    (image: 3, en: 'Low', th: 'ต่ำ'),
   ];
 
   int _selected = 0;
