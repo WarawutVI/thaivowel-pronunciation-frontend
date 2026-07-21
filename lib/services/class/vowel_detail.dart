@@ -9,8 +9,8 @@ class VowelDetail {
   final String? lipsTh;
   final String? tongueEn;
   final String? tongueTh;
-  final String? jawEn;
-  final String? jawTh;
+  final String? tongueLevelEn;
+  final String? tongueLevelTh;
   final String? linkVideo;
 
   const VowelDetail({
@@ -24,8 +24,8 @@ class VowelDetail {
     this.lipsTh,
     this.tongueEn,
     this.tongueTh,
-    this.jawEn,
-    this.jawTh,
+    this.tongueLevelEn,
+    this.tongueLevelTh,
     this.linkVideo,
   });
 
@@ -40,8 +40,8 @@ class VowelDetail {
         lipsTh: j['lips_th'] as String?,
         tongueEn: j['tongue_en'] as String?,
         tongueTh: j['tongue_th'] as String?,
-        jawEn: j['jaw_en'] as String?,
-        jawTh: j['jaw_th'] as String?,
+        tongueLevelEn: j['tongue_level_en'] as String?,
+        tongueLevelTh: j['tongue_level_th'] as String?,
         linkVideo: j['link_video'] as String?,
       );
 }
