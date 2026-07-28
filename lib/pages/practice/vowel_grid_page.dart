@@ -1,6 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:frontend/pages/practice/word_grid_page.dart';
+import 'package:frontend/pages/practice/recording_page.dart';
 import 'package:frontend/services/language_controller.dart';
 import 'package:frontend/services/practice_api.dart';
 import 'package:get/get.dart';
@@ -48,44 +48,30 @@ class _VowelGridPageState extends State<VowelGridPage> {
     }
   }
 
-  Color _cardColor(VowelProgress v) {
-    if (v.completed == 0) return const Color(0xFFF0F0F0);
-    if (v.completed >= v.total) return const Color(0xFFD4F5E2);
-    return const Color(0xFFFFE5CC);
-  }
+  // Only lesson order 1 (the vowel-only lesson) counts toward completion —
+  // "word with vowel" lessons are no longer part of the practice flow.
+  bool _isDone(VowelProgress v) => v.completed >= 1;
 
-  Color _borderColor(VowelProgress v) {
-    if (v.completed == 0) return Colors.transparent;
-    if (v.completed >= v.total) return const Color(0xFF1A7A50);
-    return const Color(0xFFFF8C42);
-  }
+  Color _cardColor(VowelProgress v) =>
+      _isDone(v) ? const Color(0xFFD4F5E2) : const Color(0xFFF0F0F0);
+
+  Color _borderColor(VowelProgress v) =>
+      _isDone(v) ? const Color(0xFF1A7A50) : Colors.transparent;
 
   Widget? _badge(VowelProgress v) {
-    if (v.completed == 0) return null;
-    if (v.completed >= v.total) {
-      return const Positioned(
-        top: 6,
-        right: 6,
-        child: CircleAvatar(
-          radius: 10,
-          backgroundColor: Color(0xFF1A7A50),
-          child: Icon(Icons.check, size: 12, color: Colors.white),
-        ),
-      );
-    }
+    if (!_isDone(v)) return null;
     return const Positioned(
       top: 6,
       right: 6,
       child: CircleAvatar(
         radius: 10,
-        backgroundColor: Color(0xFFFF8C42),
-        child: Icon(Icons.close, size: 12, color: Colors.white),
+        backgroundColor: Color(0xFF1A7A50),
+        child: Icon(Icons.check, size: 12, color: Colors.white),
       ),
     );
   }
 
-  int get _completedVowels =>
-      vowels.where((v) => v.completed >= v.total && v.total > 0).length;
+  int get _completedVowels => vowels.where(_isDone).length;
 
   @override
   Widget build(BuildContext context) {
@@ -203,10 +189,20 @@ class _VowelGridPageState extends State<VowelGridPage> {
                             final v = vowels[index];
                             return GestureDetector(
                               onTap: () async {
-                                await Get.to(() => WordGridPage(
+                                final lessons = await PracticeApi.fetchLessons(
+                                    firebaseUid, v.vowelId);
+                                final lessonOne = lessons
+                                    .where((l) => l.lessonOrder == 1)
+                                    .firstOrNull;
+                                if (lessonOne == null || !mounted) return;
+
+                                await Get.to(() => RecordingPage(
+                                      lessonId: lessonOne.lessonId,
+                                      lessonOrder: lessonOne.lessonOrder,
                                       vowelId: v.vowelId,
+                                      word: lessonOne.lessonName,
+                                      wordIpa: lessonOne.unicodePhonetic,
                                       vowelSymbol: v.symbol,
-                                      vowelType: v.vowelType,
                                       isEnglish: isEnglish,
                                     ));
                                 // Reload after returning to refresh progress
@@ -239,7 +235,7 @@ class _VowelGridPageState extends State<VowelGridPage> {
                                         ),
                                         const SizedBox(height: 8),
                                         Text(
-                                          '${v.completed}/${v.total}',
+                                          '${_isDone(v) ? 1 : 0}/1',
                                           style: TextStyle(
                                             fontSize: 12,
                                             color: Colors.grey[600],
