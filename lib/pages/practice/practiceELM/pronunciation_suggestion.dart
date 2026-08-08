@@ -23,18 +23,18 @@ PronunciationSuggestion buildPronunciationSuggestion({
    
     if (userF1 < ref.f1Min!) {
       partsEn.add('closing your mouth slightly');
-      partsTh.add('อ้าปากลดลงอีกนิดนะ');
+      partsTh.add('อ้าปากลดลงอีกนิด');
     } else if (userF1 > ref.f1Max!) {
       partsEn.add('opening your mouth wider');
-      partsTh.add('อ้าปากให้กว้างขึ้นอีกนิดนะ ');
+      partsTh.add('อ้าปากให้กว้างขึ้นอีกนิด ');
     }
 
     if (userF2 > ref.f2Max!) {
       partsEn.add('moving your tongue slightly back');
-      partsTh.add('ขยับลิ้นถอยไปด้านหลังอีกนิดนะ');
+      partsTh.add('ขยับลิ้นถอยไปด้านหลังอีกนิด');
     } else if (userF2 < ref.f2Min!) {
       partsEn.add('moving your tongue slightly forward');
-      partsTh.add('ขยับลิ้นมาด้านหน้าอีกนิดนะ');
+      partsTh.add('ขยับลิ้นมาด้านหน้าอีกนิด');
     }
   } else {
     final f1Diff = userF1 - ref.f1;

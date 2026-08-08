@@ -8,6 +8,7 @@ import 'package:frontend/pages/practice/practiceELM/phase_views.dart';
 import 'package:frontend/pages/practice/practiceELM/pronunciation_suggestion.dart';
 import 'package:frontend/pages/practice/practiceELM/result_modal.dart';
 import 'package:frontend/pages/practice/practiceELM/sample_player.dart';
+import 'package:frontend/pages/practice/practiceELM/vowel_info_dialog.dart';
 import 'package:frontend/services/language_controller.dart';
 import 'package:frontend/services/practice_api.dart';
 import 'package:get/get.dart';
@@ -266,39 +267,61 @@ class _RecordingPageState extends State<RecordingPage> {
               color: Colors.black87, fontWeight: FontWeight.bold),
         ),
       ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 300),
-            child: switch (_phase) {
-              _Phase.idle => IdleView(
-                  word: widget.word,
-                  wordIpa: widget.wordIpa,
-                  isEnglish: isEnglish,
-                  recordSeconds: _recordSeconds,
-                  onBeginFlow: _beginFlow,
-                  isPlayingSample: _samplePlayer.isPlaying,
-                  onToggleSample: _toggleSample,
-                ),
-              _Phase.getReady => GetReadyView(
-                  word: widget.word,
-                  wordIpa: widget.wordIpa,
-                  isEnglish: isEnglish,
-                  readyCountdown: _readyCountdown,
-                  getReadySeconds: _getReadySeconds,
-                ),
-              _Phase.recording => RecordingView(
-                  word: widget.word,
-                  wordIpa: widget.wordIpa,
-                  isEnglish: isEnglish,
-                  remainingSeconds: _remainingSeconds,
-                  recordSeconds: _recordSeconds,
-                ),
-              _Phase.analyzing => AnalyzingView(isEnglish: isEnglish),
-            },
+      body: Stack(
+        children: [
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                child: switch (_phase) {
+                  _Phase.idle => IdleView(
+                      word: widget.word,
+                      wordIpa: widget.wordIpa,
+                      isEnglish: isEnglish,
+                      recordSeconds: _recordSeconds,
+                      onBeginFlow: _beginFlow,
+                      isPlayingSample: _samplePlayer.isPlaying,
+                      onToggleSample: _toggleSample,
+                    ),
+                  _Phase.getReady => GetReadyView(
+                      word: widget.word,
+                      wordIpa: widget.wordIpa,
+                      isEnglish: isEnglish,
+                      readyCountdown: _readyCountdown,
+                      getReadySeconds: _getReadySeconds,
+                    ),
+                  _Phase.recording => RecordingView(
+                      word: widget.word,
+                      wordIpa: widget.wordIpa,
+                      isEnglish: isEnglish,
+                      remainingSeconds: _remainingSeconds,
+                      recordSeconds: _recordSeconds,
+                    ),
+                  _Phase.analyzing => AnalyzingView(isEnglish: isEnglish),
+                },
+              ),
+            ),
           ),
-        ),
+          Positioned(
+            top: 16,
+            right: 20,
+            child: GestureDetector(
+              onTap: () => showVowelInfoDialog(
+                  context, widget.vowelId, widget.vowelSymbol, isEnglish),
+              child: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1A7A50),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.info_outline,
+                    color: Colors.white, size: 22),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

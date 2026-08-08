@@ -1,5 +1,6 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:frontend/pages/practice/word_grid_page.dart';
+import 'package:frontend/pages/practice/recording_page.dart';
 import 'package:frontend/pages/progressELM/progress_shared.dart';
 import 'package:frontend/services/practice_api.dart';
 import 'package:get/get.dart';
@@ -49,7 +50,7 @@ class WeakVowelsList extends StatelessWidget {
               ),
             )
           else
-            ...weakVowels.map(_buildRow),
+            ...weakVowels.map((v) => _buildRow(context, v)),
         ],
       ),
     );
@@ -57,7 +58,7 @@ class WeakVowelsList extends StatelessWidget {
 
   // ── Single weak-vowel row ───────────────────────────────────────────────────
 
-  Widget _buildRow(VowelStats v) {
+  Widget _buildRow(BuildContext context, VowelStats v) {
     final pct = (v.avgAccuracy * 100).round();
 
     return Container(
@@ -101,14 +102,26 @@ class WeakVowelsList extends StatelessWidget {
             ),
           ),
 
-          // Try again → navigate to WordGridPage
+          // Try again → navigate to lesson 1 recording
           ElevatedButton(
-            onPressed: () => Get.to(() => WordGridPage(
-                  vowelId: v.vowelId,
-                  vowelSymbol: v.symbol,
-                  vowelType: v.vowelType,
-                  isEnglish: isEnglish,
-                )),
+            onPressed: () async {
+              final firebaseUid = FirebaseAuth.instance.currentUser!.uid;
+              final lessons =
+                  await PracticeApi.fetchLessons(firebaseUid, v.vowelId);
+              final lessonOne =
+                  lessons.where((l) => l.lessonOrder == 1).firstOrNull;
+              if (lessonOne == null || !context.mounted) return;
+
+              Get.to(() => RecordingPage(
+                    lessonId: lessonOne.lessonId,
+                    lessonOrder: lessonOne.lessonOrder,
+                    vowelId: v.vowelId,
+                    word: lessonOne.lessonName,
+                    wordIpa: lessonOne.unicodePhonetic,
+                    vowelSymbol: v.symbol,
+                    isEnglish: isEnglish,
+                  ));
+            },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFFF8C42),
               foregroundColor: Colors.white,

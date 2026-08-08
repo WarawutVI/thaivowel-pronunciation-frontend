@@ -212,7 +212,7 @@ class _NationalityPageState extends State<NationalityPage> {
               ),
               const SizedBox(height: 24),
               Text(
-                t('Where are you from?', 'คุณมาจากไหน?'),
+                t('Please choose your nationality', 'โปรดเลือกสัญชาติของคุณ'),
                 style: const TextStyle(
                   fontSize: 30,
                   fontWeight: FontWeight.bold,

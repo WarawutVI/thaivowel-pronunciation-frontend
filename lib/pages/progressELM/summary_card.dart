@@ -47,7 +47,7 @@ class SummaryCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                t('OVERALL ACCURACY', 'ความแม่นยำโดยรวม'),
+                t('OVERALL ACCURACY', 'ความถูกต้องโดยรวม'),
                 style: const TextStyle(
                   color: Colors.white70,
                   fontSize: 11,

@@ -24,7 +24,7 @@ class AvgAccuracyDonuts extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            t('Average Accuracy', 'ความแม่นยำเฉลี่ย'),
+            t('Average Accuracy', 'ความถูกต้องเฉลี่ย'),
             style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,

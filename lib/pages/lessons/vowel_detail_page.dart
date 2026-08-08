@@ -1,11 +1,12 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:frontend/pages/practice/word_grid_page.dart';
+import 'package:frontend/pages/practice/recording_page.dart';
 import 'package:frontend/services/language_controller.dart';
 import 'package:frontend/services/practice_api.dart';
 import 'package:frontend/widgets/pronunciation_info_card.dart';
 import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:youtube_player_flutter/youtube_player_flutter.dart'; 
+import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 class VowelDetailPage extends StatefulWidget {
   final VowelDetail vowel;
   final bool isEnglish;
@@ -217,15 +218,27 @@ class _VowelDetailPageState extends State<VowelDetailPage> {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: () => Get.to(
-                () => WordGridPage(
-                  vowelId: vowel.id,
-                  vowelSymbol: vowel.symbol,
-                  vowelType: vowel.vowelType,
-                  isEnglish: isEnglish,
-                ),
-                transition: Transition.rightToLeft,
-              ),
+              onPressed: () async {
+                final firebaseUid = FirebaseAuth.instance.currentUser!.uid;
+                final lessons =
+                    await PracticeApi.fetchLessons(firebaseUid, vowel.id);
+                final lessonOne =
+                    lessons.where((l) => l.lessonOrder == 1).firstOrNull;
+                if (lessonOne == null || !mounted) return;
+
+                Get.to(
+                  () => RecordingPage(
+                    lessonId: lessonOne.lessonId,
+                    lessonOrder: lessonOne.lessonOrder,
+                    vowelId: vowel.id,
+                    word: lessonOne.lessonName,
+                    wordIpa: lessonOne.unicodePhonetic,
+                    vowelSymbol: vowel.symbol,
+                    isEnglish: isEnglish,
+                  ),
+                  transition: Transition.rightToLeft,
+                );
+              },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF1A7A50),
                 padding: const EdgeInsets.symmetric(vertical: 16),
