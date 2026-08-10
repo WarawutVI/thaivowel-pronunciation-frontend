@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/pages/practice/practiceELM/mic_check_modal.dart';
 import 'package:frontend/pages/practice/vowel_grid_page.dart';
+import 'package:frontend/pages/practice/vowel_pair_grid_page.dart';
 import 'package:frontend/services/language_controller.dart';
 import 'package:get/get.dart';
 
@@ -25,7 +26,8 @@ class _PracticepageState extends State<Practicepage> {
   Widget _buildCategoryCard({
     required String title,
     required String subtitle,
-    required String imagePath,
+    String? imagePath,
+    IconData? icon,
     required Color color,
     required Color cardColor,
     required VoidCallback onTap,
@@ -61,7 +63,10 @@ class _PracticepageState extends State<Practicepage> {
                 ],
               ),
             ),
-            Image.asset(imagePath, width: 80, height: 80),
+            if (imagePath != null)
+              Image.asset(imagePath, width: 80, height: 80)
+            else if (icon != null)
+              Icon(icon, size: 64, color: color),
           ],
         ),
       ),
@@ -131,6 +136,17 @@ class _PracticepageState extends State<Practicepage> {
             color: const Color(0xFFE05C6A),
             cardColor: const Color(0xFFFFB3BA),
             onTap: () => Get.to(() => const VowelGridPage(type: 'short')),
+          ),
+          _buildCategoryCard(
+            title: t('Vowel Pairs', 'สระเสียงใกล้เคียงกัน'),
+            subtitle: t(
+              'Practice vowels that sound alike',
+              'ฝึกออกเสียงสระที่มักสับสน',
+            ),
+            icon: Icons.compare_arrows,
+            color: const Color(0xFF2A9B6A),
+            cardColor: const Color(0xFFC7ECDB),
+            onTap: () => Get.to(() => const VowelPairGridPage()),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),

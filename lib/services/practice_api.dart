@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:frontend/services/class/daily_trend.dart';
 import 'package:frontend/services/class/lesson_progress.dart';
+import 'package:frontend/services/class/predict_pair_result.dart';
 import 'package:frontend/services/class/predict_result.dart';
 import 'package:frontend/services/class/progress_summary.dart';
 import 'package:frontend/services/class/session_record.dart';
@@ -15,6 +16,7 @@ import 'package:http/http.dart' as http;
 
 export 'package:frontend/services/class/daily_trend.dart';
 export 'package:frontend/services/class/lesson_progress.dart';
+export 'package:frontend/services/class/predict_pair_result.dart';
 export 'package:frontend/services/class/predict_result.dart';
 export 'package:frontend/services/class/progress_summary.dart';
 export 'package:frontend/services/class/session_record.dart';
@@ -114,6 +116,28 @@ class PracticeApi {
     final res = await http.Response.fromStream(streamed);
     if (res.statusCode != 200) throw Exception('Prediction failed: ${res.statusCode}');
     return PredictResult.fromJson(jsonDecode(res.body) as Map<String, dynamic>);
+  }
+
+  // POST Flask /predict_pair
+  static Future<PredictPairResult> predictPair(
+      Uint8List audioBytes, int index1, int index2) async {
+    final req =
+        http.MultipartRequest('POST', Uri.parse('$_flaskBase/predict_pair'));
+    req.headers.addAll(_headers);
+    req.fields['index1'] = index1.toString();
+    req.fields['index2'] = index2.toString();
+    req.files.add(http.MultipartFile.fromBytes(
+      'file',
+      audioBytes,
+      filename: 'recording.wav',
+    ));
+    final streamed = await req.send();
+    final res = await http.Response.fromStream(streamed);
+    if (res.statusCode != 200) {
+      throw Exception('Pair prediction failed: ${res.statusCode}');
+    }
+    return PredictPairResult.fromJson(
+        jsonDecode(res.body) as Map<String, dynamic>);
   }
 
   // POST /practice_sessions
