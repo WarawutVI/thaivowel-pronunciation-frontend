@@ -28,9 +28,10 @@ class ProgressCard extends StatelessWidget {
 
 // ── Long / short (/ all) vowel dropdown pill ─────────────────────────────────
 class FilterPill extends StatelessWidget {
-  final String value; // 'short' | 'long' | 'all' (if includeAll)
+  final String value; // 'short' | 'long' | 'pair' | 'all' (if includeAll)
   final bool isEnglish;
   final bool includeAll;
+  final bool includePair;
   final ValueChanged<String> onChanged;
 
   const FilterPill({
@@ -39,11 +40,13 @@ class FilterPill extends StatelessWidget {
     required this.isEnglish,
     required this.onChanged,
     this.includeAll = false,
+    this.includePair = false,
   });
 
   String _labelFor(String v) => switch (v) {
         'short' => isEnglish ? 'Short vowels' : 'สระเสียงสั้น',
         'long' => isEnglish ? 'Long vowels' : 'สระเสียงยาว',
+        'pair' => isEnglish ? 'Vowel pairs' : 'สระเสียงใกล้เคียงกัน',
         _ => isEnglish ? 'All vowels' : 'สระทั้งหมด',
       };
 
@@ -84,6 +87,7 @@ class FilterPill extends StatelessWidget {
         if (includeAll) _item('all'),
         _item('short'),
         _item('long'),
+        if (includePair) _item('pair'),
       ],
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),

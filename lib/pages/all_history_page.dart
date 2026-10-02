@@ -43,12 +43,20 @@ class _AllHistoryPageState extends State<AllHistoryPage> {
     }
   }
 
-  List<SessionRecord> get _typeFiltered => _vowelType == 'all'
-      ? _sessions
-      : _sessions.where((s) => s.vowelType == _vowelType).toList();
+  List<SessionRecord> get _typeFiltered => switch (_vowelType) {
+        'all' => _sessions,
+        'pair' => _sessions.where((s) => s.isPair).toList(),
+        _ => _sessions.where((s) => s.vowelType == _vowelType).toList(),
+      };
 
-  List<String> get _availableSymbols =>
-      _typeFiltered.map((s) => s.symbol).toSet().toList()..sort();
+  // Pair sessions don't have a single vowel symbol, so only single-vowel
+  // rows participate in the symbol filter dropdown.
+  List<String> get _availableSymbols => _typeFiltered
+      .where((s) => !s.isPair)
+      .map((s) => s.symbol!)
+      .toSet()
+      .toList()
+    ..sort();
 
   Widget _buildSymbolPill(List<String> symbols) {
     return PopupMenuButton<String?>(
@@ -135,7 +143,7 @@ class _AllHistoryPageState extends State<AllHistoryPage> {
         : typeFiltered.where((s) => s.symbol == _symbol).toList();
     final avgConfidence = filtered.isEmpty
         ? null
-        : filtered.map((s) => s.confidence).reduce((a, b) => a + b) /
+        : filtered.map((s) => s.displayConfidence).reduce((a, b) => a + b) /
             filtered.length;
 
     return Scaffold(
@@ -167,12 +175,13 @@ class _AllHistoryPageState extends State<AllHistoryPage> {
                     value: _vowelType,
                     isEnglish: isEnglish,
                     includeAll: true,
+                    includePair: true,
                     onChanged: (v) => setState(() {
                       _vowelType = v;
                       _symbol = null;
                     }),
                   ),
-                  _buildSymbolPill(symbols),
+                  if (_vowelType != 'pair') _buildSymbolPill(symbols),
                   if (avgConfidence != null)
                     Container(
                       padding: const EdgeInsets.symmetric(

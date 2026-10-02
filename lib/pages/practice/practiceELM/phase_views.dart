@@ -8,6 +8,7 @@ class IdleView extends StatelessWidget {
   final VoidCallback onBeginFlow;
   final bool isPlayingSample;
   final VoidCallback onToggleSample;
+  final double wordFontSize;
 
   const IdleView({
     super.key,
@@ -18,6 +19,7 @@ class IdleView extends StatelessWidget {
     required this.onBeginFlow,
     required this.isPlayingSample,
     required this.onToggleSample,
+    this.wordFontSize = 150,
   });
 
   String t(String en, String th) => isEnglish ? en : th;
@@ -30,8 +32,9 @@ class IdleView extends StatelessWidget {
       children: [
         Text(
           word,
-          style: const TextStyle(
-            fontSize: 150,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: wordFontSize,
             fontWeight: FontWeight.bold,
             color: Colors.black87,
           ),
@@ -183,6 +186,7 @@ class RecordingView extends StatelessWidget {
   final bool isEnglish;
   final int remainingSeconds;
   final int recordSeconds;
+  final double wordFontSize;
 
   const RecordingView({
     super.key,
@@ -191,6 +195,7 @@ class RecordingView extends StatelessWidget {
     required this.isEnglish,
     required this.remainingSeconds,
     required this.recordSeconds,
+    this.wordFontSize = 130,
   });
 
   String t(String en, String th) => isEnglish ? en : th;
@@ -212,8 +217,9 @@ class RecordingView extends StatelessWidget {
         const SizedBox(height: 12),
         Text(
           word,
-          style: const TextStyle(
-            fontSize: 130,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: wordFontSize,
             fontWeight: FontWeight.bold,
             color: Colors.black87,
           ),

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:frontend/services/class/daily_trend.dart';
 import 'package:frontend/services/class/lesson_progress.dart';
+import 'package:frontend/services/class/predict_pair_result.dart';
 import 'package:frontend/services/class/predict_result.dart';
 import 'package:frontend/services/class/progress_summary.dart';
 import 'package:frontend/services/class/session_record.dart';
@@ -9,12 +10,14 @@ import 'package:frontend/services/class/user_profile.dart';
 import 'package:frontend/services/class/user_streak.dart';
 import 'package:frontend/services/class/vowel_detail.dart';
 import 'package:frontend/services/class/vowel_formant.dart';
+import 'package:frontend/services/class/vowel_pair_progress.dart';
 import 'package:frontend/services/class/vowel_progress.dart';
 import 'package:frontend/services/class/vowel_stats.dart';
 import 'package:http/http.dart' as http;
 
 export 'package:frontend/services/class/daily_trend.dart';
 export 'package:frontend/services/class/lesson_progress.dart';
+export 'package:frontend/services/class/predict_pair_result.dart';
 export 'package:frontend/services/class/predict_result.dart';
 export 'package:frontend/services/class/progress_summary.dart';
 export 'package:frontend/services/class/session_record.dart';
@@ -22,6 +25,7 @@ export 'package:frontend/services/class/user_profile.dart';
 export 'package:frontend/services/class/user_streak.dart';
 export 'package:frontend/services/class/vowel_detail.dart';
 export 'package:frontend/services/class/vowel_formant.dart';
+export 'package:frontend/services/class/vowel_pair_progress.dart';
 export 'package:frontend/services/class/vowel_progress.dart';
 export 'package:frontend/services/class/vowel_stats.dart';
 
@@ -87,6 +91,19 @@ class PracticeApi {
     return data.map((e) => VowelProgress.fromJson(e as Map<String, dynamic>)).toList();
   }
 
+  // GET /vowel_pairs?firebase_uid=X
+  static Future<List<VowelPairProgress>> fetchVowelPairs(
+      String firebaseUid) async {
+    final uri = Uri.parse('$_base/vowel_pairs')
+        .replace(queryParameters: {'firebase_uid': firebaseUid});
+    final res = await http.get(uri, headers: _headers);
+    if (res.statusCode != 200) throw Exception('Failed to load vowel pairs');
+    final List data = jsonDecode(res.body) as List;
+    return data
+        .map((e) => VowelPairProgress.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
   // GET /lessons?vowel_id=X&firebase_uid=Y
   static Future<List<LessonProgress>> fetchLessons(
       String firebaseUid, int vowelId) async {
@@ -114,6 +131,63 @@ class PracticeApi {
     final res = await http.Response.fromStream(streamed);
     if (res.statusCode != 200) throw Exception('Prediction failed: ${res.statusCode}');
     return PredictResult.fromJson(jsonDecode(res.body) as Map<String, dynamic>);
+  }
+
+  // POST Flask /predict_pair
+  static Future<PredictPairResult> predictPair(
+      Uint8List audioBytes, int index1, int index2) async {
+    final req =
+        http.MultipartRequest('POST', Uri.parse('$_flaskBase/predict_pair'));
+    req.headers.addAll(_headers);
+    req.fields['index1'] = index1.toString();
+    req.fields['index2'] = index2.toString();
+    req.files.add(http.MultipartFile.fromBytes(
+      'file',
+      audioBytes,
+      filename: 'recording.wav',
+    ));
+    final streamed = await req.send();
+    final res = await http.Response.fromStream(streamed);
+    if (res.statusCode != 200) {
+      throw Exception('Pair prediction failed: ${res.statusCode}');
+    }
+    return PredictPairResult.fromJson(
+        jsonDecode(res.body) as Map<String, dynamic>);
+  }
+
+  // POST /practice_pair_sessions
+  static Future<void> savePairSession({
+    required String firebaseUid,
+    required int shortVowelId,
+    required int longVowelId,
+    required double confidenceShort,
+    required double confidenceLong,
+    required String assessmentLevelShort,
+    required String assessmentLevelLong,
+    required double userF1Short,
+    required double userF2Short,
+    required double userF1Long,
+    required double userF2Long,
+    required int durationSeconds,
+  }) async {
+    await http.post(
+      Uri.parse('$_base/practice_pair_sessions'),
+      headers: _jsonHeaders,
+      body: jsonEncode({
+        'firebase_uid': firebaseUid,
+        'short_vowel_id': shortVowelId,
+        'long_vowel_id': longVowelId,
+        'confidence_short': confidenceShort,
+        'confidence_long': confidenceLong,
+        'assessment_level_short': assessmentLevelShort,
+        'assessment_level_long': assessmentLevelLong,
+        'user_f1_short': userF1Short,
+        'user_f2_short': userF2Short,
+        'user_f1_long': userF1Long,
+        'user_f2_long': userF2Long,
+        'duration_seconds': durationSeconds,
+      }),
+    );
   }
 
   // POST /practice_sessions
