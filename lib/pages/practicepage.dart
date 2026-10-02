@@ -148,29 +148,29 @@ class _PracticepageState extends State<Practicepage> {
             cardColor: const Color(0xFFC7ECDB),
             onTap: () => Get.to(() => const VowelPairGridPage()),
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            child: SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: () => showMicCheckModal(context, isEnglish: isEnglish),
-                icon: const Icon(Icons.mic, color: Color(0xFF1A7A50)),
-                label: Text(
-                  t('Check your microphone', 'เช็คไมโครโฟนของคุณ'),
-                  style: const TextStyle(
-                    color: Color(0xFF1A7A50),
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: Color(0xFF1A7A50)),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14)),
-                ),
-              ),
-            ),
-          ),
+          // Padding(
+          //   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          //   child: SizedBox(
+          //     width: double.infinity,
+          //     child: OutlinedButton.icon(
+          //       onPressed: () => showMicCheckModal(context, isEnglish: isEnglish),
+          //       icon: const Icon(Icons.mic, color: Color(0xFF1A7A50)),
+          //       label: Text(
+          //         t('Check your microphone', 'เช็คไมโครโฟนของคุณ'),
+          //         style: const TextStyle(
+          //           color: Color(0xFF1A7A50),
+          //           fontWeight: FontWeight.w600,
+          //         ),
+          //       ),
+          //       style: OutlinedButton.styleFrom(
+          //         side: const BorderSide(color: Color(0xFF1A7A50)),
+          //         padding: const EdgeInsets.symmetric(vertical: 14),
+          //         shape: RoundedRectangleBorder(
+          //             borderRadius: BorderRadius.circular(14)),
+          //       ),
+          //     ),
+          //   ),
+          // ),
         ],
       ),
     );

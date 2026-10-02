@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:frontend/pages/practice/practiceELM/pair_result_modal.dart';
@@ -16,16 +17,20 @@ enum _PairPhase { idle, getReady, recording, analyzing }
 
 /// Records a single take of two vowels spoken back-to-back (e.g. อะ → อา)
 /// and sends it to the backend's /predict_pair endpoint for a combined
-/// per-segment result. Results are shown only — nothing is persisted yet.
+/// per-segment result, then saves it via POST /practice_pair_sessions.
 class PairRecordingPage extends StatefulWidget {
-  final VowelProgress shortVowel;
-  final VowelProgress longVowel;
+  final int shortVowelId;
+  final String shortSymbol;
+  final int longVowelId;
+  final String longSymbol;
   final bool isEnglish;
 
   const PairRecordingPage({
     super.key,
-    required this.shortVowel,
-    required this.longVowel,
+    required this.shortVowelId,
+    required this.shortSymbol,
+    required this.longVowelId,
+    required this.longSymbol,
     this.isEnglish = true,
   });
 
@@ -45,7 +50,8 @@ class _PairRecordingPageState extends State<PairRecordingPage> {
   int _remainingSeconds = _recordSeconds;
   Timer? _countdownTimer;
 
-  String get _word => '${widget.shortVowel.symbol} → ${widget.longVowel.symbol}';
+  String get _word => '${widget.shortSymbol} → ${widget.longSymbol}';
+  String get firebaseUid => FirebaseAuth.instance.currentUser!.uid;
   String t(String en, String th) => isEnglish ? en : th;
 
   @override
@@ -104,7 +110,7 @@ class _PairRecordingPageState extends State<PairRecordingPage> {
     } else {
       final dir = await getApplicationDocumentsDirectory();
       path =
-          '${dir.path}/vowel_pair_${widget.shortVowel.vowelId}_${widget.longVowel.vowelId}.wav';
+          '${dir.path}/vowel_pair_${widget.shortVowelId}_${widget.longVowelId}.wav';
     }
 
     await _recorder.start(
@@ -135,12 +141,30 @@ class _PairRecordingPageState extends State<PairRecordingPage> {
   }
 
   Future<void> _submitToApi(String filePath) async {
+    final recordStart =
+        DateTime.now().subtract(Duration(seconds: _recordSeconds));
     try {
       final audioBytes = await _getAudioBytes(filePath);
       final result = await PracticeApi.predictPair(
         audioBytes,
-        widget.shortVowel.vowelId - 1,
-        widget.longVowel.vowelId - 1,
+        widget.shortVowelId - 1,
+        widget.longVowelId - 1,
+      );
+      final duration = DateTime.now().difference(recordStart).inSeconds;
+
+      PracticeApi.savePairSession(
+        firebaseUid: firebaseUid,
+        shortVowelId: widget.shortVowelId,
+        longVowelId: widget.longVowelId,
+        confidenceShort: result.segment1.confidence,
+        confidenceLong: result.segment2.confidence,
+        assessmentLevelShort: result.segment1.assessmentLevel,
+        assessmentLevelLong: result.segment2.assessmentLevel,
+        userF1Short: result.segment1.userF1,
+        userF2Short: result.segment1.userF2,
+        userF1Long: result.segment2.userF1,
+        userF2Long: result.segment2.userF2,
+        durationSeconds: duration,
       );
 
       setState(() => _phase = _PairPhase.idle);
@@ -149,8 +173,8 @@ class _PairRecordingPageState extends State<PairRecordingPage> {
       showPairResultModal(
         context,
         isEnglish: isEnglish,
-        shortSymbol: widget.shortVowel.symbol,
-        longSymbol: widget.longVowel.symbol,
+        shortSymbol: widget.shortSymbol,
+        longSymbol: widget.longSymbol,
         segment1: result.segment1,
         segment2: result.segment2,
       );
@@ -195,6 +219,7 @@ class _PairRecordingPageState extends State<PairRecordingPage> {
                   recordSeconds: _recordSeconds,
                   onBeginFlow: _beginFlow,
                   isPlayingSample: false,
+                  wordFontSize: 72,
                   onToggleSample: () => Get.snackbar(
                     t('No sample', 'ไม่มีเสียงตัวอย่าง'),
                     t(
@@ -216,6 +241,7 @@ class _PairRecordingPageState extends State<PairRecordingPage> {
                   isEnglish: isEnglish,
                   remainingSeconds: _remainingSeconds,
                   recordSeconds: _recordSeconds,
+                  wordFontSize: 48,
                 ),
               _PairPhase.analyzing => AnalyzingView(isEnglish: isEnglish),
             },

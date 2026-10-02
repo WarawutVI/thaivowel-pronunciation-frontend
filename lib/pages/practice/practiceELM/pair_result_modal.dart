@@ -12,7 +12,11 @@ void showPairResultModal(
   required PredictPairSegment segment2,
 }) {
   String t(String en, String th) => isEnglish ? en : th;
-  final bothPassed = segment1.isPassed && segment2.isPassed;
+  final avgConfidence = (segment1.confidence + segment2.confidence) / 2;
+  final passed = avgConfidence >= 0.51;
+  final level = assessmentLabel(avgConfidence, isEnglish);
+  final assessImage = _assessImagePath(avgConfidence);
+  final assessCaption = _assessCaption(avgConfidence, isEnglish);
 
   showDialog(
     context: context,
@@ -29,15 +33,41 @@ void showPairResultModal(
               children: [
                 Center(
                   child: Text(
-                    bothPassed
-                        ? '${t('Well Done!', 'เก่งมากเลย!')} 🎉'
-                        : t('Keep Practicing', 'ฝึกต่ออีกนิดนะ'),
+                    passed ? '$level 🎉' : level,
                     style: TextStyle(
-                      fontSize: 22,
+                      fontSize: 26,
                       fontWeight: FontWeight.bold,
-                      color: bothPassed
-                          ? const Color(0xFF34C759)
-                          : Colors.black87,
+                      color: accuracyColor(avgConfidence),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Center(
+                  child: Image.asset(assessImage, height: 150),
+                ),
+                const SizedBox(height: 8),
+                Center(
+                  child: Text(
+                    assessCaption,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: accuracyColor(avgConfidence),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Center(
+                  child: Text(
+                    t(
+                      'average accuracy ${(avgConfidence * 100).toStringAsFixed(0)}%',
+                      'ความถูกต้องเฉลี่ย ${(avgConfidence * 100).toStringAsFixed(0)}%',
+                    ),
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
                     ),
                   ),
                 ),
@@ -105,6 +135,32 @@ void showPairResultModal(
       ),
     ),
   );
+}
+
+/// Maps a 0–1 confidence value to its assessment illustration, using the
+/// same tier thresholds as [assessmentLabel]/[accuracyColor].
+String _assessImagePath(double confidence) {
+  final pct = (confidence * 100).round();
+  if (pct >= 81) return 'assets/assess/Excellent.png';
+  if (pct >= 51) return 'assets/assess/Good.png';
+  if (pct >= 30) return 'assets/assess/Improvement.png';
+  return 'assets/assess/Incorrect.png';
+}
+
+/// Maps a 0–1 confidence value to its assessment caption, using the same
+/// tier thresholds as [assessmentLabel]/[accuracyColor]/[_assessImagePath].
+String _assessCaption(double confidence, bool isEnglish) {
+  final pct = (confidence * 100).round();
+  if (pct >= 81) {
+    return isEnglish ? 'Fantastic Pronunciation' : 'เก่งสุดๆไปเลย';
+  }
+  if (pct >= 51) {
+    return isEnglish ? 'Well Done!' : 'เก่งมากเลย!';
+  }
+  if (pct >= 30) {
+    return isEnglish ? "You're Almost There!" : 'พยายามอีกนิดนะ!';
+  }
+  return isEnglish ? 'Try Again!' : 'ลองใหม่อีกครั้งนะ!';
 }
 
 class _SegmentResultRow extends StatelessWidget {

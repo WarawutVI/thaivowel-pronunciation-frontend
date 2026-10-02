@@ -5,16 +5,8 @@ import 'package:frontend/services/language_controller.dart';
 import 'package:frontend/services/practice_api.dart';
 import 'package:get/get.dart';
 
-class _VowelPair {
-  final VowelProgress short;
-  final VowelProgress long;
-
-  const _VowelPair(this.short, this.long);
-}
-
-/// Grid of vowel pairs that sound alike (e.g. อะ → อา). Pairs are formed by
-/// zipping the short/long vowel lists in fetch order — assumes each vowel's
-/// short/long counterpart shares the same position in its list.
+/// Grid of vowel pairs that sound alike (e.g. อะ → อา), backed by
+/// GET /vowel_pairs. Tapping a card opens PairRecordingPage.
 class VowelPairGridPage extends StatefulWidget {
   const VowelPairGridPage({super.key});
 
@@ -24,7 +16,7 @@ class VowelPairGridPage extends StatefulWidget {
 
 class _VowelPairGridPageState extends State<VowelPairGridPage> {
   bool isEnglish = true;
-  List<_VowelPair> pairs = [];
+  List<VowelPairProgress> pairs = [];
   bool loading = true;
   String? error;
 
@@ -40,12 +32,10 @@ class _VowelPairGridPageState extends State<VowelPairGridPage> {
 
   Future<void> _load() async {
     try {
-      final shorts = await PracticeApi.fetchVowels(firebaseUid, 'short');
-      final longs = await PracticeApi.fetchVowels(firebaseUid, 'long');
-      final count = shorts.length < longs.length ? shorts.length : longs.length;
+      final data = await PracticeApi.fetchVowelPairs(firebaseUid);
       if (!mounted) return;
       setState(() {
-        pairs = List.generate(count, (i) => _VowelPair(shorts[i], longs[i]));
+        pairs = data;
         loading = false;
       });
     } catch (e) {
@@ -56,6 +46,16 @@ class _VowelPairGridPageState extends State<VowelPairGridPage> {
       });
     }
   }
+
+  bool _isDone(VowelPairProgress p) => p.completed >= 1;
+
+  Color _cardColor(VowelPairProgress p) =>
+      _isDone(p) ? const Color(0xFFD4F5E2) : const Color(0xFFF0F0F0);
+
+  Color _borderColor(VowelPairProgress p) =>
+      _isDone(p) ? const Color(0xFF1A7A50) : Colors.transparent;
+
+  int get _completedPairs => pairs.where(_isDone).length;
 
   @override
   Widget build(BuildContext context) {
@@ -100,13 +100,36 @@ class _VowelPairGridPageState extends State<VowelPairGridPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        t('Vowel Pairs', 'สระเสียงใกล้เคียงกัน'),
-                        style: const TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
-                        ),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              t('Vowel Pairs', 'สระเสียงใกล้เคียงกัน'),
+                              style: const TextStyle(
+                                fontSize: 28,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 14, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF2A9B6A),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              '$_completedPairs / ${pairs.length}',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 6),
                       Text(
@@ -115,6 +138,19 @@ class _VowelPairGridPageState extends State<VowelPairGridPage> {
                           'อัดเสียงสระทั้งสองคำในครั้งเดียว',
                         ),
                         style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+                      ),
+                      const SizedBox(height: 6),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: LinearProgressIndicator(
+                          value: pairs.isEmpty
+                              ? 0
+                              : _completedPairs / pairs.length,
+                          backgroundColor: const Color(0xFFDDDDDD),
+                          valueColor: const AlwaysStoppedAnimation<Color>(
+                              Color(0xFF2A9B6A)),
+                          minHeight: 6,
+                        ),
                       ),
                       const SizedBox(height: 20),
                       Expanded(
@@ -130,43 +166,85 @@ class _VowelPairGridPageState extends State<VowelPairGridPage> {
                           itemBuilder: (context, index) {
                             final pair = pairs[index];
                             return GestureDetector(
-                              onTap: () => Get.to(() => PairRecordingPage(
-                                    shortVowel: pair.short,
-                                    longVowel: pair.long,
-                                    isEnglish: isEnglish,
-                                  )),
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFF0F0F0),
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      pair.short.symbol,
-                                      style: const TextStyle(
-                                        fontSize: 22,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.black87,
+                              onTap: () async {
+                                await Get.to(() => PairRecordingPage(
+                                      shortVowelId: pair.shortVowelId,
+                                      shortSymbol: pair.shortSymbol,
+                                      longVowelId: pair.longVowelId,
+                                      longSymbol: pair.longSymbol,
+                                      isEnglish: isEnglish,
+                                    ));
+                                
+                                if (!mounted) return;
+                                setState(() => loading = true);
+                                _load();
+                              },
+                              child: Stack(
+                                children: [
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      color: _cardColor(pair),
+                                      borderRadius: BorderRadius.circular(16),
+                                      border: Border.all(
+                                          color: _borderColor(pair), width: 2),
+                                    ),
+                                    child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Text(
+                                              pair.shortSymbol,
+                                              style: const TextStyle(
+                                                fontSize: 22,
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.black87,
+                                              ),
+                                            ),
+                                            const Padding(
+                                              padding: EdgeInsets.symmetric(
+                                                  horizontal: 6),
+                                              child: Icon(Icons.arrow_forward,
+                                                  size: 16,
+                                                  color: Color(0xFF2A9B6A)),
+                                            ),
+                                            Text(
+                                              pair.longSymbol,
+                                              style: const TextStyle(
+                                                fontSize: 22,
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.black87,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          '${_isDone(pair) ? 1 : 0}/1',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.grey[600],
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  if (_isDone(pair))
+                                    const Positioned(
+                                      top: 6,
+                                      right: 6,
+                                      child: CircleAvatar(
+                                        radius: 10,
+                                        backgroundColor: Color(0xFF1A7A50),
+                                        child: Icon(Icons.check,
+                                            size: 12, color: Colors.white),
                                       ),
                                     ),
-                                    const Padding(
-                                      padding:
-                                          EdgeInsets.symmetric(horizontal: 6),
-                                      child: Icon(Icons.arrow_forward,
-                                          size: 16, color: Color(0xFF2A9B6A)),
-                                    ),
-                                    Text(
-                                      pair.long.symbol,
-                                      style: const TextStyle(
-                                        fontSize: 22,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.black87,
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                                ],
                               ),
                             );
                           },

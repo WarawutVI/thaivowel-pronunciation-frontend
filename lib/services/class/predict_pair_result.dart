@@ -13,6 +13,16 @@ class PredictPairSegment {
 
   bool get isPassed => (confidence * 100).round() >= 51;
 
+  /// English-canonical assessment level (matches the DB's stored values),
+  /// independent of the app's display language.
+  String get assessmentLevel {
+    final pct = (confidence * 100).round();
+    if (pct >= 81) return 'Excellent';
+    if (pct >= 51) return 'Good';
+    if (pct >= 30) return 'Needs Improvement';
+    return 'Incorrect';
+  }
+
   factory PredictPairSegment.fromJson(Map<String, dynamic> j) {
     final formants = j['user_formants'] as Map<String, dynamic>? ?? {};
     return PredictPairSegment(
