@@ -49,11 +49,22 @@ class _VowelPairGridPageState extends State<VowelPairGridPage> {
   bool _isDone(VowelPairProgress p, bool longFirst) =>
       p.completed(longFirst: longFirst) >= 1;
 
-  Color _cardColor(bool done) =>
-      done ? const Color(0xFFD4F5E2) : const Color(0xFFF0F0F0);
+  bool _isTried(VowelPairProgress p, bool longFirst) =>
+      p.attempted(longFirst: longFirst) >= 1;
 
-  Color _borderColor(bool done) =>
-      done ? const Color(0xFF1A7A50) : Colors.transparent;
+  // Same 3 states as vowel_grid_page.dart / lesson_card.dart:
+  // not tried → grey, passed → green, tried but not passed → orange.
+  Color _cardColor(bool done, bool tried) {
+    if (done) return const Color(0xFFD4F5E2);
+    if (tried) return const Color(0xFFFFE5CC);
+    return Colors.white;
+  }
+
+  Color _borderColor(bool done, bool tried) {
+    if (done) return const Color(0xFF1A7A50);
+    if (tried) return const Color(0xFFFF8C42);
+    return const Color(0xFFDDDDDD);
+  }
 
   
   int get _totalExercises => pairs.length * 2; // total short and long before =18
@@ -114,6 +125,7 @@ class _VowelPairGridPageState extends State<VowelPairGridPage> {
     final firstSymbol = longFirst ? pair.longSymbol : pair.shortSymbol;
     final secondSymbol = longFirst ? pair.shortSymbol : pair.longSymbol;
     final done = _isDone(pair, longFirst);
+    final tried = _isTried(pair, longFirst);
     return GestureDetector(
       onTap: () async {
         await Get.to(() => PairRecordingPage(
@@ -133,9 +145,9 @@ class _VowelPairGridPageState extends State<VowelPairGridPage> {
         children: [
           Container(
             decoration: BoxDecoration(
-              color: _cardColor(done),
+              color: _cardColor(done, tried),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: _borderColor(done), width: 2),
+              border: Border.all(color: _borderColor(done, tried), width: 2),
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -178,14 +190,16 @@ class _VowelPairGridPageState extends State<VowelPairGridPage> {
               ],
             ),
           ),
-          if (done)
-            const Positioned(
+          if (done || tried)
+            Positioned(
               top: 6,
               right: 6,
               child: CircleAvatar(
                 radius: 10,
-                backgroundColor: Color(0xFF1A7A50),
-                child: Icon(Icons.check, size: 12, color: Colors.white),
+                backgroundColor:
+                    done ? const Color(0xFF1A7A50) : const Color(0xFFFF8C42),
+                child: Icon(done ? Icons.check : Icons.close,
+                    size: 12, color: Colors.white),
               ),
             ),
         ],

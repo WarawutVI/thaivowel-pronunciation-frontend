@@ -3,6 +3,7 @@ class VowelProgress {
   final String symbol;
   final String vowelType;
   final int completed;
+  final int attempted; // lessons tried at least once, passed or not
   final int total;
 
   const VowelProgress({
@@ -10,6 +11,7 @@ class VowelProgress {
     required this.symbol,
     required this.vowelType,
     required this.completed,
+    this.attempted = 0,
     required this.total,
   });
 
@@ -18,6 +20,7 @@ class VowelProgress {
         symbol: j['symbol'] as String,
         vowelType: j['vowel_type'] as String,
         completed: (j['completed'] ?? 0) as int,
+        attempted: (j['attempted'] ?? 0) as int,
         total: (j['total'] ?? 6) as int,
       );
 }

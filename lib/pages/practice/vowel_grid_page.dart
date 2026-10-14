@@ -51,21 +51,34 @@ class _VowelGridPageState extends State<VowelGridPage> {
 
   bool _isDone(VowelProgress v) => v.completed >= 1; //return boolean
 
-  Color _cardColor(VowelProgress v) =>
-      _isDone(v) ? const Color(0xFFD4F5E2) : const Color(0xFFF0F0F0);
+  bool _isTried(VowelProgress v) => v.attempted >= 1; // tried, passed or not
 
-  Color _borderColor(VowelProgress v) =>
-      _isDone(v) ? const Color(0xFF1A7A50) : Colors.transparent;
+  // Same 3 states as lessonCardColor/lessonBorderColor in lesson_card.dart:
+  // not tried → grey, passed → green, tried but not passed → orange.
+  Color _cardColor(VowelProgress v) {
+    if (_isDone(v)) return const Color(0xFFD4F5E2);
+    if (_isTried(v)) return const Color(0xFFFFE5CC);
+    return Colors.white;
+  }
 
-  Widget? _badge(VowelProgress v) { // ติกถูก
-    if (!_isDone(v)) return null; //if not done, return null
-    return const Positioned(
+  Color _borderColor(VowelProgress v) {
+    if (_isDone(v)) return const Color(0xFF1A7A50);
+    if (_isTried(v)) return const Color(0xFFFF8C42);
+    return const Color(0xFFDDDDDD);
+  }
+
+  Widget? _badge(VowelProgress v) { // ติกถูก / กากบาท
+    if (!_isDone(v) && !_isTried(v)) return null; // not tried → no badge
+    final done = _isDone(v);
+    return Positioned(
       top: 6,
       right: 6,
       child: CircleAvatar(
         radius: 10,
-        backgroundColor: Color(0xFF1A7A50),
-        child: Icon(Icons.check, size: 12, color: Colors.white),
+        backgroundColor:
+            done ? const Color(0xFF1A7A50) : const Color(0xFFFF8C42),
+        child: Icon(done ? Icons.check : Icons.close,
+            size: 12, color: Colors.white),
       ),
     );
   }
