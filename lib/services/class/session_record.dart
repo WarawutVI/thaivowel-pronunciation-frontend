@@ -20,6 +20,7 @@ class SessionRecord {
   final double? confidenceLong;
   final String? assessmentLevelShort;
   final String? assessmentLevelLong;
+  final bool longFirst; // pair spoken long → short
 
   const SessionRecord({
     required this.type,
@@ -36,13 +37,19 @@ class SessionRecord {
     this.confidenceLong,
     this.assessmentLevelShort,
     this.assessmentLevelLong,
+    this.longFirst = false,
   });
 
   bool get isPair => type == 'pair';
 
-  /// Single symbol for single-vowel rows, "short→long" for pair rows.
+  /// Pair symbols in the order they were spoken.
+  String? get firstSymbol => longFirst ? longSymbol : shortSymbol;
+  String? get secondSymbol => longFirst ? shortSymbol : longSymbol;
+
+  /// Single symbol for single-vowel rows, "first→second" (spoken order)
+  /// for pair rows.
   String get displaySymbol =>
-      isPair ? '$shortSymbol→$longSymbol' : (symbol ?? '');
+      isPair ? '$firstSymbol→$secondSymbol' : (symbol ?? '');
 
   /// Single confidence for single-vowel rows, average of both segments
   /// for pair rows (used for sorting/filtering, not shown as-is in the UI).
@@ -67,6 +74,7 @@ class SessionRecord {
         confidenceLong: (pair['confidence_long'] as num?)?.toDouble(),
         assessmentLevelShort: pair['assessment_level_short'] as String?,
         assessmentLevelLong: pair['assessment_level_long'] as String?,
+        longFirst: pair['long_first'] as bool? ?? false,
       );
     }
 

@@ -152,7 +152,7 @@ class _SessionRowState extends State<SessionRow> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '${s.shortSymbol} → ${s.longSymbol}',
+                          '${s.firstSymbol} → ${s.secondSymbol}',
                           style: const TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
@@ -197,12 +197,18 @@ class _SessionRowState extends State<SessionRow> {
               child: Row(
                 children: [
                   Expanded(
-                      child: _segmentPill(s.shortSymbol ?? '',
-                          s.confidenceShort ?? 0, widget.isEnglish)),
+                      child: s.longFirst
+                          ? _segmentPill(s.longSymbol ?? '',
+                              s.confidenceLong ?? 0, widget.isEnglish)
+                          : _segmentPill(s.shortSymbol ?? '',
+                              s.confidenceShort ?? 0, widget.isEnglish)),
                   const SizedBox(width: 8),
                   Expanded(
-                      child: _segmentPill(s.longSymbol ?? '',
-                          s.confidenceLong ?? 0, widget.isEnglish)),
+                      child: s.longFirst
+                          ? _segmentPill(s.shortSymbol ?? '',
+                              s.confidenceShort ?? 0, widget.isEnglish)
+                          : _segmentPill(s.longSymbol ?? '',
+                              s.confidenceLong ?? 0, widget.isEnglish)),
                 ],
               ),
             ),

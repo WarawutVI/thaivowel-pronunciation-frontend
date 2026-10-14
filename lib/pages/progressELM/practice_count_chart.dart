@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:frontend/pages/progressELM/progress_shared.dart';
 import 'package:frontend/services/practice_api.dart';
 
-/// Vertical bar chart showing how many times each vowel was practised.
-/// Includes a long/short filter pill.
 class PracticeCountChart extends StatelessWidget {
   final List<VowelStats> stats;
   final String type; // 'short' | 'long'
@@ -74,7 +72,7 @@ class PracticeCountChart extends StatelessWidget {
           height: 160,
           child: BarChart(
             BarChartData(
-              maxY: maxY + 2,
+              maxY: maxY + 2, // เผื่อ 2 หน่วย
               barGroups: stats.asMap().entries.map((e) {
                 return BarChartGroupData(
                   x: e.key,

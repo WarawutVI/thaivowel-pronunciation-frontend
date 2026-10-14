@@ -37,12 +37,10 @@ class AvgAccuracyDonuts extends StatelessWidget {
               _donut(
                 accuracy: longAvg,
                 label: t('Long vowels', 'สระเสียงยาว'),
-                color: const Color(0xFF1A7A50),
               ),
               _donut(
                 accuracy: shortAvg,
                 label: t('Short vowels', 'สระเสียงสั้น'),
-                color: const Color(0xFFFF8C42),
               ),
             ],
           ),
@@ -56,10 +54,10 @@ class AvgAccuracyDonuts extends StatelessWidget {
   Widget _donut({
     required double accuracy,
     required String label,
-    required Color color,
   }) {
-    final clamped = accuracy.clamp(0.0, 1.0);
+    final clamped = accuracy.clamp(0.0, 1.0); // จำกัดค่าให้อยู่ระหว่าง 0.0 ถึง 1.0
     final pct = (accuracy * 100).round();
+    final color = accuracyColor(accuracy);
 
     return Column(
       children: [

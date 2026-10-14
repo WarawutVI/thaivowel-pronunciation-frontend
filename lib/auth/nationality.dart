@@ -170,7 +170,7 @@ class _NationalityPageState extends State<NationalityPage> {
         const Center(child: CircularProgressIndicator()),
         barrierDismissible: false,
       );
-      await PracticeApi.createUser(
+      await PracticeApi.createUser( // #3
         firebaseUid: widget.uid,
         username: widget.username,
         email: widget.email,
@@ -191,7 +191,8 @@ class _NationalityPageState extends State<NationalityPage> {
       );
     }
   }
-
+  
+//main display
   @override
   Widget build(BuildContext context) {
     return Scaffold(

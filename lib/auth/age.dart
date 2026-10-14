@@ -31,7 +31,7 @@ class _AgepageState extends State<Agepage> {
   late FixedExtentScrollController _scrollController;
   late bool isEnglish;
   int selectedAge = 17;
-  final List<int> ages = List.generate(86, (i) => i + 5); // 5–90
+  final List<int> ages = List.generate(86, (i) => i + 5); // 5–90 i=0 to 85, +5 = 5–90
   final List<int> quickAges = [14, 17, 21, 30, 45];
 
   @override
@@ -55,7 +55,7 @@ class _AgepageState extends State<Agepage> {
     _scrollController.animateToItem(
       ages.indexOf(age),
       duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
+      curve: Curves.easeInOut, // Smooth scrolling animation
     );
   }
 
@@ -70,6 +70,8 @@ class _AgepageState extends State<Agepage> {
         ));
   }
 
+
+//main display
   @override
   Widget build(BuildContext context) {
     return Scaffold(

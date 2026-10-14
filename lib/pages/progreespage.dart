@@ -54,13 +54,12 @@ class _ProgreespageState extends State<Progreespage> {
     });
     try {
       final results = await Future.wait([
-        PracticeApi.fetchSummary(_uid),
-        PracticeApi.fetchStreak(_uid),
-        PracticeApi.fetchVowelStats(_uid, 'short'),
-        PracticeApi.fetchVowelStats(_uid, 'long'),
-        // Fetch one more than HistoryBox displays (5) so it can tell
-        // whether a "Show more" link is needed.
-        PracticeApi.fetchRecentSessions(_uid, limit: 6),
+        PracticeApi.fetchSummary(_uid), // #15
+        PracticeApi.fetchStreak(_uid), // #14
+        PracticeApi.fetchVowelStats(_uid, 'short'), // #16
+        PracticeApi.fetchVowelStats(_uid, 'long'), // #16
+        
+        PracticeApi.fetchRecentSessions(_uid, limit: 6), //#17
       ]);
       if (!mounted) return;
       setState(() {
@@ -85,26 +84,26 @@ class _ProgreespageState extends State<Progreespage> {
   List<VowelStats> get _barStats =>
       _barType == 'short' ? _shortStats : _longStats;
 
-  /// Bottom-3 vowels by average accuracy (only vowels that have been practised).
+ 
   List<VowelStats> get _weakVowels {
-    return [..._shortStats, ..._longStats]
+    return [..._shortStats, ..._longStats] // fetch both data which practice count != 0
         .where((v) => v.practiceCount > 0)
         .toList()
       ..sort((a, b) => a.avgAccuracy.compareTo(b.avgAccuracy));
   }
 
-  // ── Build ────────────────────────────────────────────────────────────────────
+// ── Build ────────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF2F5F3),
       appBar: _buildAppBar(),
-      body: switch ((loading, error)) {
+      body: switch ((loading, error)) { // switch case  loading  and error are  parameters.
         (true, _) => const Center(
             child: CircularProgressIndicator(color: Color(0xFF1A7A50))),
         (_, String e) when e.isNotEmpty => _buildError(e),
-        _ => _buildBody(),
+        _ => _buildBody(), //else condition
       },
     );
   }
@@ -128,7 +127,7 @@ class _ProgreespageState extends State<Progreespage> {
   // ── Scrollable body with all section widgets ──────────────────────────────────
 
   Widget _buildBody() {
-    return RefreshIndicator(
+    return RefreshIndicator( //วงกลมโหลดข้อมูลเมื่อผู้ใช้ลากหน้าจอลงเพื่อรีเฟรช (Pull to Refresh)
       color: const Color.fromARGB(255, 236, 236, 236),
       onRefresh: _load,
       child: SingleChildScrollView(
@@ -137,23 +136,18 @@ class _ProgreespageState extends State<Progreespage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // 1 — Hero accuracy banner
             SummaryCard(
               summary: _summary!,
               streak: _streak?.currentStreak ?? 0,
               isEnglish: isEnglish,
             ),
             const SizedBox(height: 16),
-
-               // 3 — Long vs short accuracy donuts
             AvgAccuracyDonuts(
               longAvg: _summary!.longAvgAccuracy,
               shortAvg: _summary!.shortAvgAccuracy,
               isEnglish: isEnglish,
             ),
             const SizedBox(height: 16),
-
-            // 2 — Practice count bar chart
             PracticeCountChart(
               stats: _barStats,
               type: _barType,
@@ -161,24 +155,16 @@ class _ProgreespageState extends State<Progreespage> {
               onTypeChanged: (v) => setState(() => _barType = v),
             ),
             const SizedBox(height: 16),
-
-         
-
-            // 4 — Accuracy trend (self-contained: fetches its own data)
             TrendCard(
               firebaseUid: _uid,
               isEnglish: isEnglish,
             ),
             const SizedBox(height: 16),
-
-            // 5 — Recent sessions list
             HistoryBox(
               sessions: _recentSessions,
               isEnglish: isEnglish,
             ),
             const SizedBox(height: 16),
-
-            // 6 — Weak vowels CTA
             WeakVowelsList(
               weakVowels: _weakVowels.take(3).toList(),
               isEnglish: isEnglish,

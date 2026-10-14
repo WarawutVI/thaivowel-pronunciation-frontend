@@ -6,8 +6,8 @@ import 'package:get/get.dart';
 void showPairResultModal(
   BuildContext context, {
   required bool isEnglish,
-  required String shortSymbol,
-  required String longSymbol,
+  required String firstSymbol,
+  required String secondSymbol,
   required PredictPairSegment segment1,
   required PredictPairSegment segment2,
 }) {
@@ -73,13 +73,13 @@ void showPairResultModal(
                 ),
                 const SizedBox(height: 20),
                 _SegmentResultRow(
-                  symbol: shortSymbol,
+                  symbol: firstSymbol,
                   segment: segment1,
                   isEnglish: isEnglish,
                 ),
                 const SizedBox(height: 12),
                 _SegmentResultRow(
-                  symbol: longSymbol,
+                  symbol: secondSymbol,
                   segment: segment2,
                   isEnglish: isEnglish,
                 ),

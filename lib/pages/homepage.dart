@@ -40,7 +40,7 @@ class _HomepageState extends State<Homepage> with SingleTickerProviderStateMixin
     if (email != null && email.contains('@')) {
       return email.split('@')[0];
     }
-    return t('there', 'เพื่อน');
+    return t('user', 'ผู้ใช้'); // for debug
   }
 
   @override
@@ -67,15 +67,15 @@ class _HomepageState extends State<Homepage> with SingleTickerProviderStateMixin
 
   Future<void> _loadUser() async {
     try {
-      final profile = await PracticeApi.fetchUser(_uid);
+      final profile = await PracticeApi.fetchUser(_uid); // #1
       if (mounted) setState(() => _dbUsername = profile.username);
     } catch (_) {}
   }
 
   Future<void> _loadStreak() async {
     try {
-      final s = await PracticeApi.fetchStreak(_uid);
-      if (!mounted) return;
+      final s = await PracticeApi.fetchStreak(_uid); // #14
+      if (!mounted) return; // mounter ตรวจสอบว่า State ของ Widget ยังทำงานอยู่หรือไม่
       setState(() {
         _currentStreak = s.currentStreak;
         _longestStreak = s.longestStreak;
@@ -239,6 +239,8 @@ class _HomepageState extends State<Homepage> with SingleTickerProviderStateMixin
     );
   }
 
+
+//main display
   @override
   Widget build(BuildContext context) {
     return Scaffold(

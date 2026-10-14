@@ -14,9 +14,7 @@ class SamplePlayer {
 
   static const _extensions = ['wav', 'm4a'];
 
-  /// [basePath] should omit the file extension — each candidate in
-  /// [_extensions] is tried in turn, since sample files aren't all the
-  /// same format.
+
   Future<void> toggle(String basePath, {required VoidCallback onError}) async {
     if (isPlaying) {
       await _player.stop();
