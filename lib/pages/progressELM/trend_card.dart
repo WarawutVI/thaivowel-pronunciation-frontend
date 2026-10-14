@@ -4,14 +4,7 @@ import 'package:frontend/pages/progressELM/progress_shared.dart';
 import 'package:frontend/services/practice_api.dart';
 import 'package:intl/intl.dart';
 
-/// Accuracy trend line chart — three periods:
-///   • 1W : avg accuracy per day  for the last 7 days
-///   • 1M : avg accuracy per week for the last 30 days
-///   • 3M : avg accuracy per week for the last 90 days
-///
-/// X-axis always shows "d MMM" dates (~5 labels, evenly spaced).
-/// Y-axis is always 0–100 %.
-/// Period selector sits below the chart as circle buttons.
+
 class TrendCard extends StatefulWidget {
   final String firebaseUid;
   final bool isEnglish;
@@ -52,15 +45,13 @@ class _TrendCardState extends State<TrendCard> {
   Future<void> _loadTrend() async {
     setState(() => _loading = true);
     try {
-      // 'quarter' (3M) reuses the backend's weekly-bucket 'month' grouping,
-      // just over a wider explicit date range, since the backend has no
-      // dedicated 3-month period.
-      final isQuarter = _period == 'quarter';
+   
+      final isQuarter = _period == 'quarter';// check is quarter or not
       final now = DateTime.now();
-      final data = await PracticeApi.fetchTrend(
+      final data = await PracticeApi.fetchTrend( // #18
         widget.firebaseUid,
         _vowelType,
-        period: isQuarter ? 'month' : _period,
+        period: isQuarter ? 'quarter' : _period,
         start: isQuarter
             ? DateFormat('yyyy-MM-dd').format(now.subtract(const Duration(days: 90)))
             : null,
@@ -78,23 +69,24 @@ class _TrendCardState extends State<TrendCard> {
   }
 
   // ── Chart data helpers ────────────────────────────────────────────────────────
-
+ //FlSpot is a class that represents a point in a 2D space(X,Y)
   List<FlSpot> get _spots => _trendData
       .asMap()
       .entries
       .map((e) => FlSpot(e.key.toDouble(), e.value.avgAccuracy * 100))
       .toList();
-
+    // e.key is index of X
+    // e.value.avgAccuracy is Y value (0.0–1.0)
   (double, double) get _xRange {
     final last = _trendData.isEmpty ? 1.0 : (_trendData.length - 1).toDouble();
-    return (0, last);
+    return (0, last); //index X start 0 So I want it has 7 in X (0,6)
   }
 
-  /// Show ~5 labels evenly spaced across the data.
-  double get _labelInterval {
+  
+  double get _labelInterval { //ระยะห่างวันที่ display
     final n = _trendData.length;
-    if (n <= 7) return 1;
-    return (n / 5).ceilToDouble();
+    if (n <= 7) return 1; //มากกว่า 7 จะไม่แสดงทุกวัน
+    return (n / 5).ceilToDouble(); // ปัดขึ้น
   }
 
   /// All periods: "d MMM" format (e.g. "15 Jul", "04 Sep").
@@ -183,8 +175,7 @@ class _TrendCardState extends State<TrendCard> {
           maxX: maxX,
           minY: 0,    // Y-axis always 0–100 %
           maxY: 100,
-          // Curved lines can overshoot past minY/maxY between sharp spikes;
-          // clip so that overshoot doesn't bleed into the axis labels.
+          
           clipData: const FlClipData.all(),
           lineBarsData: [
             LineChartBarData(
@@ -300,7 +291,7 @@ class _TrendCardState extends State<TrendCard> {
     if (_trendData.length < 2) return const SizedBox();
 
     final values = _trendData.map((e) => e.avgAccuracy * 100).toList();
-    final avg    = values.reduce((a, b) => a + b) / values.length;
+    final avg    = values.reduce((a, b) => a + b) / values.length; // values.reduce((a, b) => a + b) is sumation all
     final delta  = values.last - values.first;
     final isUp   = delta >= 0;
     final color  = isUp ? const Color(0xFF1A7A50) : const Color(0xFFFF8C42);

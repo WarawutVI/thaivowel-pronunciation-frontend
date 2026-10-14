@@ -51,7 +51,7 @@ class _VowelInfoDialogState extends State<_VowelInfoDialog> {
 
   Future<void> _load() async {
     try {
-      final all = await PracticeApi.fetchVowelDetails();
+      final all = await PracticeApi.fetchVowelDetails(); // #6
       final match = all.where((v) => v.id == widget.vowelId).firstOrNull;
       _initVideo(match?.linkVideo);
       if (mounted) setState(() { _detail = match; _loading = false; });

@@ -50,8 +50,8 @@ class _LoginState extends State<Login> {
     }
 
     try {
-      Get.dialog(
-        const Center(child: CircularProgressIndicator()),
+      Get.dialog( // dispaly 
+        const Center(child: CircularProgressIndicator()), // show loading indicator
         barrierDismissible: false,
       );
 
@@ -60,10 +60,9 @@ class _LoginState extends State<Login> {
         password: password.text,
       );
 
-      Get.back();
+      Get.back(); //close the loading dialog
     } on FirebaseAuthException catch (e) {
       Get.back();
-
       String message = t("An error occurred", "เกิดข้อผิดพลาด");
       if (e.code == 'user-not-found') {
         message = t("Email not found", "ไม่พบอีเมลนี้ในระบบ");
@@ -72,7 +71,6 @@ class _LoginState extends State<Login> {
       } else if (e.code == 'invalid-email') {
         message = t("Invalid email format", "รูปแบบอีเมลไม่ถูกต้อง");
       }
-
       Get.snackbar(
         t("Login Failed", "เข้าสู่ระบบไม่สำเร็จ"),
         message,
@@ -90,9 +88,9 @@ class _LoginState extends State<Login> {
         barrierDismissible: false,
       );
 
-      late UserCredential userCredential;
+      late UserCredential userCredential; // Declare userCredential variable here
 
-      if (kIsWeb) {
+      if (kIsWeb) {// Use signInWithPopup for web or phone platforms True == run on web
         userCredential = await FirebaseAuth.instance
             .signInWithPopup(GoogleAuthProvider());
       } else {
@@ -118,10 +116,8 @@ class _LoginState extends State<Login> {
           return;
         }
 
-        final GoogleSignInAuthentication googleAuth =
-            await googleUser.authentication;
-        debugPrint(
-            'idToken null? ${googleAuth.idToken == null} | accessToken null? ${googleAuth.accessToken == null}');
+        final GoogleSignInAuthentication googleAuth =await googleUser.authentication; // Get the authentication tokens
+        debugPrint('idToken null? ${googleAuth.idToken == null} | accessToken null? ${googleAuth.accessToken == null}'); //check  is null or not
 
         if (googleAuth.idToken == null) {
           Get.back();
@@ -135,12 +131,11 @@ class _LoginState extends State<Login> {
           return;
         }
 
-        final AuthCredential credential = GoogleAuthProvider.credential(
+        final AuthCredential credential = GoogleAuthProvider.credential( // Create a credential using the tokens
           accessToken: googleAuth.accessToken,
           idToken: googleAuth.idToken,
         );
-        userCredential =
-            await FirebaseAuth.instance.signInWithCredential(credential);
+        userCredential =await FirebaseAuth.instance.signInWithCredential(credential);
       }
 
       if (userCredential.additionalUserInfo?.isNewUser == true) {
@@ -159,7 +154,7 @@ class _LoginState extends State<Login> {
       }
 
       Get.back();
-      Get.offAll(() => const Wrapper());
+      Get.offAll(() => const Wrapper()); // state is changed so it gona bing to homepage
     } on Exception catch (e) {
       Get.back();
       debugPrint("Detailed Google Sign-In Error: $e");
@@ -228,13 +223,13 @@ class _LoginState extends State<Login> {
     );
   }
 
-  @override
+  @override //main display
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF1A7A50),
       body: Column(
         children: [
-          SafeArea(
+          SafeArea( // full screen for mobile 
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
               child: Column(
@@ -243,7 +238,6 @@ class _LoginState extends State<Login> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-
                       LanguageToggleButton(
                         isEnglish: isEnglish,
                         onChanged: (v) => setState(() => isEnglish = v),
@@ -253,7 +247,7 @@ class _LoginState extends State<Login> {
                   ),
                   const SizedBox(height: 24),
                   Stack(
-                    clipBehavior: Clip.none,
+                    clipBehavior: Clip.none,// allow the image to overflow the stack
                     children: [
                       Positioned(
                         top: -50,
@@ -321,7 +315,7 @@ class _LoginState extends State<Login> {
                       isPassword: true,
                       isVisible: _passwordVisible,
                       onToggleVisibility: () =>
-                          setState(() => _passwordVisible = !_passwordVisible),
+                          setState(() => _passwordVisible = !_passwordVisible), // Toggle password visibility
                     ),
                     const SizedBox(height: 8),
                     Align(
@@ -394,9 +388,9 @@ class _LoginState extends State<Login> {
                     ),
                     const SizedBox(height: 24),
                     Center(
-                      child: GestureDetector(
+                      child: GestureDetector(// navigate
                         onTap: () => Get.to(() => const Signup()),
-                        child: RichText(
+                        child: RichText( // display text with different styles
                           text: TextSpan(
                             text: t("Don't have an account? ", 'ยังไม่มีบัญชี? '),
                             style: const TextStyle(color: Colors.black54),

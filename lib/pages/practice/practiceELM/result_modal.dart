@@ -176,8 +176,6 @@ void showResultModal(
   );
 }
 
-/// Maps a 0–1 confidence value to its assessment illustration, using the
-/// same tier thresholds as [assessmentLabel]/[accuracyColor].
 String _assessImagePath(double confidence) {
   final pct = (confidence * 100).round();
   if (pct >= 81) return 'assets/assess/Excellent.png';
@@ -186,8 +184,6 @@ String _assessImagePath(double confidence) {
   return 'assets/assess/Incorrect.png';
 }
 
-/// Maps a 0–1 confidence value to its assessment caption, using the same
-/// tier thresholds as [assessmentLabel]/[accuracyColor]/[_assessImagePath].
 String _assessCaption(double confidence, bool isEnglish) {
   final pct = (confidence * 100).round();
   if (pct >= 81) {

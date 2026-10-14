@@ -76,7 +76,7 @@ class _GenderPageState extends State<GenderPage> {
               : null,
         ),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
+          mainAxisSize: MainAxisSize.min,//shape fit for content
           children: [
             Image.asset(
               isFemale ? 'assets/picture/female.png' : 'assets/picture/male.png',
@@ -99,11 +99,13 @@ class _GenderPageState extends State<GenderPage> {
     );
   }
 
+
+//main display
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: SafeArea(
+      body: SafeArea(//avoid notch and status bar
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           child: Column(

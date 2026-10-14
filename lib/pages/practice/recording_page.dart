@@ -5,7 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:frontend/pages/practice/practiceELM/phase_views.dart';
-import 'package:frontend/pages/practice/practiceELM/pronunciation_suggestion.dart';
+import 'package:frontend/pages/practice/practiceELM/suggestion.dart';
 import 'package:frontend/pages/practice/practiceELM/result_modal.dart';
 import 'package:frontend/pages/practice/practiceELM/sample_player.dart';
 import 'package:frontend/pages/practice/practiceELM/vowel_info_dialog.dart';
@@ -99,14 +99,14 @@ class _RecordingPageState extends State<RecordingPage> {
   }
 
   Future<Uint8List> _getAudioBytes(String path) async {
-    if (kIsWeb) {
+    if (kIsWeb) { //web 
       final res = await http.get(Uri.parse(path));
       return res.bodyBytes;
     }
-    return File(path).readAsBytes();
+    return File(path).readAsBytes(); // read directly document directory in mobile 
   }
 
-  Future<void> _beginFlow() async {
+  Future<void> _beginFlow() async {  // first step
     final hasPermission = await _recorder.hasPermission();
     if (!hasPermission) {
       Get.snackbar(
@@ -123,11 +123,11 @@ class _RecordingPageState extends State<RecordingPage> {
       _readyCountdown = _getReadySeconds;
     });
 
-    _countdownTimer?.cancel();
+    _countdownTimer?.cancel();// Cancel any existing timer before starting a new one
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) async {
       if (_readyCountdown <= 1) {
         timer.cancel();
-        await _startRecording();
+        await _startRecording(); // เริ่มบันทึกเสียงหลังจาก countdown เสร็จ
       } else {
         setState(() => _readyCountdown--);
       }
@@ -139,7 +139,7 @@ class _RecordingPageState extends State<RecordingPage> {
     if (kIsWeb) {
       path = 'vowel_recording.wav';
     } else {
-      final dir = await getApplicationDocumentsDirectory();
+      final dir = await getApplicationDocumentsDirectory(); // Get the app's document directory
       path = '${dir.path}/vowel_${widget.vowelId}.wav';
     }
 
@@ -159,7 +159,7 @@ class _RecordingPageState extends State<RecordingPage> {
       _userSamples = [];
     });
 
-    _countdownTimer?.cancel();
+    _countdownTimer?.cancel(); // Cancel any existing timer before starting a new one
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) async {
       if (_remainingSeconds <= 1) {
         timer.cancel();
@@ -182,12 +182,12 @@ class _RecordingPageState extends State<RecordingPage> {
 
       VowelFormant? refFormant;
       try {
-        refFormant = await PracticeApi.fetchVowelFormant(widget.vowelId);
+        refFormant = await PracticeApi.fetchVowelFormant(widget.vowelId); // #5
       } catch (e) {
         debugPrint('fetchVowelFormant(${widget.vowelId}) failed: $e');
       }
 
-      PracticeApi.saveSession(
+      PracticeApi.saveSession( // #9
         firebaseUid: firebaseUid,
         lessonId: widget.lessonId,
         confidence: result.confidence,
@@ -195,14 +195,14 @@ class _RecordingPageState extends State<RecordingPage> {
         isPassed: result.isPassed,
         durationSeconds: duration,
       );
-      PracticeApi.saveProgress(
+      PracticeApi.saveProgress( //#11
         firebaseUid: firebaseUid,
         lessonId: widget.lessonId,
         isCompleted: result.isPassed,
         bestAccuracy: result.confidence,
         assessmentLevel: result.assessmentLevel,
       );
-      PracticeApi.updateStreak(firebaseUid);
+      PracticeApi.updateStreak(firebaseUid); // #12
 
       setState(() {
         _confidence  = result.confidence;
@@ -250,6 +250,7 @@ class _RecordingPageState extends State<RecordingPage> {
     }
   }
 
+// main display
   @override
   Widget build(BuildContext context) {
     return Scaffold(

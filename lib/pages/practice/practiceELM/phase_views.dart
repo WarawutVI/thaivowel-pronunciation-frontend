@@ -143,7 +143,7 @@ class GetReadyView extends StatelessWidget {
           child: Stack(
             alignment: Alignment.center,
             children: [
-              SizedBox(
+              SizedBox( // clock
                 width: 140,
                 height: 140,
                 child: CircularProgressIndicator(

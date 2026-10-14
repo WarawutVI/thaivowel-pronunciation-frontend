@@ -7,6 +7,7 @@ import 'package:frontend/widgets/pronunciation_info_card.dart';
 import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
+
 class VowelDetailPage extends StatefulWidget {
   final VowelDetail vowel;
   final bool isEnglish;
@@ -64,7 +65,7 @@ class _VowelDetailPageState extends State<VowelDetailPage> {
 
   @override
   void dispose() {
-    _ytController?.dispose(); // ✨ ล้างหน่วยความจำให้ถูกต้อง
+    _ytController?.dispose(); 
     super.dispose();
   }
 
@@ -74,94 +75,97 @@ class _VowelDetailPageState extends State<VowelDetailPage> {
     final isLong = vowel.vowelType == 'long';
 
     Scaffold buildScaffold(Widget? player) => Scaffold(
-          backgroundColor: const Color(0xFFF4FAF7),
-          appBar: AppBar(
-            backgroundColor: Colors.white,
-            elevation: 1,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.black87),
-              onPressed: () => Get.back(),
-            ),
-            title: Text(
-              t('Lessons', 'บทเรียน'),
-              style: const TextStyle(
-                color: Colors.black87,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+      backgroundColor: const Color(0xFFF4FAF7),
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 1,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black87),
+          onPressed: () => Get.back(),
+        ),
+        title: Text(
+          t('Lessons', 'บทเรียน'),
+          style: const TextStyle(
+            color: Colors.black87,
+            fontWeight: FontWeight.bold,
           ),
-          body: ListView(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
+        ),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              // ── Symbol + type badge + phonetic ──────────────────────────────
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    vowel.symbol,
-                    style: const TextStyle(
-                      fontSize: 80,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                      height: 1.0,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFE8F5EE),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            isLong
-                                ? t('LONG VOWEL', 'สระเสียงยาว')
-                                : t('SHORT VOWEL', 'สระเสียงสั้น'),
-                            style: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF1A7A50),
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          vowel.unicodePhonetic ?? '',
-                          style: const TextStyle(
-                              fontSize: 22, color: Colors.black54),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-
-              // ── How to pronounce card ────────────────────────────────────────
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE8F5EE),
-                  borderRadius: BorderRadius.circular(14),
+              Text(
+                vowel.symbol,
+                style: const TextStyle(
+                  fontSize: 80,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                  height: 1.0,
                 ),
+              ),
+              const SizedBox(width: 16),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE8F5EE),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        isLong
+                            ? t('LONG VOWEL', 'สระเสียงยาว')
+                            : t('SHORT VOWEL', 'สระเสียงสั้น'),
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF1A7A50),
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
                     Text(
-                      t('HOW TO PRONOUNCE', 'วิธีออกเสียง'),
+                      vowel.unicodePhonetic ?? '',
                       style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF1A7A50),
-                        letterSpacing: 0.8,
+                        fontSize: 22,
+                        color: Colors.black54,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+
+          // ── How to pronounce card ────────────────────────────────────────
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFE8F5EE),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  t('HOW TO PRONOUNCE', 'วิธีออกเสียง'),
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF1A7A50),
+                    letterSpacing: 0.8,
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -181,11 +185,15 @@ class _VowelDetailPageState extends State<VowelDetailPage> {
                         t('Lip Shape', 'รูปปาก'),
                         (isEnglish ? vowel.lipsEn : vowel.lipsTh)!,
                       ),
-                    if ((isEnglish ? vowel.tongueLevelEn : vowel.tongueLevelTh) !=
+                    if ((isEnglish
+                            ? vowel.tongueLevelEn
+                            : vowel.tongueLevelTh) !=
                         null)
                       MapEntry(
                         t('Tongue Height', 'ระดับลิ้น'),
-                        (isEnglish ? vowel.tongueLevelEn : vowel.tongueLevelTh)!,
+                        (isEnglish
+                            ? vowel.tongueLevelEn
+                            : vowel.tongueLevelTh)!,
                       ),
                     if ((isEnglish ? vowel.tongueEn : vowel.tongueTh) != null)
                       MapEntry(
@@ -207,10 +215,10 @@ class _VowelDetailPageState extends State<VowelDetailPage> {
           if (_ytController != null) ...[
             ClipRRect(
               borderRadius: BorderRadius.circular(14),
-              child: player, // ✨ สั่ง Render ตัวแปร player ที่แกะมาจากโครงสร้างด้านบนโดยตรง
+              child:player, // ✨ สั่ง Render ตัวแปร player ที่แกะมาจากโครงสร้างด้านบนโดยตรง
             ),
             const SizedBox(height: 6),
-            
+
             const SizedBox(height: 20),
           ],
 
@@ -220,10 +228,13 @@ class _VowelDetailPageState extends State<VowelDetailPage> {
             child: ElevatedButton(
               onPressed: () async {
                 final firebaseUid = FirebaseAuth.instance.currentUser!.uid;
-                final lessons =
-                    await PracticeApi.fetchLessons(firebaseUid, vowel.id);
-                final lessonOne =
-                    lessons.where((l) => l.lessonOrder == 1).firstOrNull;
+                final lessons = await PracticeApi.fetchLessons(
+                  firebaseUid,
+                  vowel.id,
+                );
+                final lessonOne = lessons
+                    .where((l) => l.lessonOrder == 1)
+                    .firstOrNull;
                 if (lessonOne == null || !mounted) return;
 
                 Get.to(
@@ -258,8 +269,11 @@ class _VowelDetailPageState extends State<VowelDetailPage> {
                     ),
                   ),
                   const SizedBox(width: 6),
-                  const Icon(Icons.chevron_right,
-                      color: Colors.white, size: 20),
+                  const Icon(
+                    Icons.chevron_right,
+                    color: Colors.white,
+                    size: 20,
+                  ),
                 ],
               ),
             ),
@@ -267,6 +281,10 @@ class _VowelDetailPageState extends State<VowelDetailPage> {
         ],
       ),
     );
+
+
+
+
 
     if (_ytController == null) return buildScaffold(null);
     return YoutubePlayerBuilder(

@@ -35,7 +35,7 @@ class SummaryCard extends StatelessWidget {
       ),
       child: Stack(
         children: [
-          // Decorative mini bars in background
+          
           Positioned(
             right: 0, top: 0, bottom: 0, width: 130,
             child: Opacity(

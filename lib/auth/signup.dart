@@ -53,7 +53,7 @@ class _SignupState extends State<Signup> {
 
       late UserCredential userCredential;
 
-      if (kIsWeb) {
+      if (kIsWeb) { // check run on web or mobile  mobile is true
         userCredential = await FirebaseAuth.instance
             .signInWithPopup(GoogleAuthProvider());
       } else {
@@ -79,8 +79,7 @@ class _SignupState extends State<Signup> {
           return;
         }
 
-        final GoogleSignInAuthentication googleAuth =
-            await googleUser.authentication;
+        final GoogleSignInAuthentication googleAuth =await googleUser.authentication;
         debugPrint(
             'idToken null? ${googleAuth.idToken == null} | accessToken null? ${googleAuth.accessToken == null}');
 
@@ -100,8 +99,7 @@ class _SignupState extends State<Signup> {
           accessToken: googleAuth.accessToken,
           idToken: googleAuth.idToken,
         );
-        userCredential =
-            await FirebaseAuth.instance.signInWithCredential(credential);
+        userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
       }
 
       final user = userCredential.user;
@@ -114,7 +112,7 @@ class _SignupState extends State<Signup> {
           return;
         }
 
-        String displayName = user.displayName?.trim() ?? "";
+        String displayName = user.displayName?.trim() ?? ""; //if displayName is null, set it to empty string but trim it to remove any leading/trailing whitespace
         if (displayName.isEmpty) displayName = "Unknown User";
         final String fname = displayName.split(' ')[0];
 
@@ -180,7 +178,7 @@ class _SignupState extends State<Signup> {
         email: email.text.trim(),
         password: password.text,
       );
-      final String uid = userCredential.user!.uid;
+      final String uid = userCredential.user!.uid; // user is guaranteed to be non-null 
 
       Get.back();
       Get.to(() => GenderPage(
@@ -214,8 +212,7 @@ class _SignupState extends State<Signup> {
     }
   }
 
- 
-
+ //widget text box
   Widget _buildTextField({
     required TextEditingController controller,
     required String hint,
@@ -226,7 +223,7 @@ class _SignupState extends State<Signup> {
   }) {
     return TextField(
       controller: controller,
-      obscureText: isPassword && !isVisible,
+      obscureText: isPassword && !isVisible, // Hide text if it's a password and not visible
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: const TextStyle(color: Colors.grey),
@@ -260,7 +257,7 @@ class _SignupState extends State<Signup> {
       placeholderBuilder: (_) => const SizedBox(width: 22, height: 22),
     );
   }
-
+//main display
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -276,11 +273,10 @@ class _SignupState extends State<Signup> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                     
                       LanguageToggleButton(
                         isEnglish: isEnglish,
                         onChanged: (v) => setState(() => isEnglish = v),
-                        pillStyle: true,
+                        pillStyle: true,//shape like a pill.
                       ),
                     ],
                   ),

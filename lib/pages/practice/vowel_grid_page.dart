@@ -6,7 +6,7 @@ import 'package:frontend/services/practice_api.dart';
 import 'package:get/get.dart';
 
 class VowelGridPage extends StatefulWidget {
-  final String type; // 'short' or 'long'
+  final String type; 
 
   const VowelGridPage({super.key, required this.type});
 
@@ -33,7 +33,7 @@ class _VowelGridPageState extends State<VowelGridPage> {
 
   Future<void> _load() async {
     try {
-      final data = await PracticeApi.fetchVowels(firebaseUid, widget.type);
+      final data = await PracticeApi.fetchVowels(firebaseUid, widget.type);// #4
       if (!mounted) return;
       setState(() {
         vowels = data;
@@ -48,31 +48,46 @@ class _VowelGridPageState extends State<VowelGridPage> {
     }
   }
 
-  // Only lesson order 1 (the vowel-only lesson) counts toward completion —
-  // "word with vowel" lessons are no longer part of the practice flow.
-  bool _isDone(VowelProgress v) => v.completed >= 1;
 
-  Color _cardColor(VowelProgress v) =>
-      _isDone(v) ? const Color(0xFFD4F5E2) : const Color(0xFFF0F0F0);
+  bool _isDone(VowelProgress v) => v.completed >= 1; //return boolean
 
-  Color _borderColor(VowelProgress v) =>
-      _isDone(v) ? const Color(0xFF1A7A50) : Colors.transparent;
+  bool _isTried(VowelProgress v) => v.attempted >= 1; // tried, passed or not
 
-  Widget? _badge(VowelProgress v) {
-    if (!_isDone(v)) return null;
-    return const Positioned(
+  // Same 3 states as lessonCardColor/lessonBorderColor in lesson_card.dart:
+  // not tried → grey, passed → green, tried but not passed → orange.
+  Color _cardColor(VowelProgress v) {
+    if (_isDone(v)) return const Color(0xFFD4F5E2);
+    if (_isTried(v)) return const Color(0xFFFFE5CC);
+    return Colors.white;
+  }
+
+  Color _borderColor(VowelProgress v) {
+    if (_isDone(v)) return const Color(0xFF1A7A50);
+    if (_isTried(v)) return const Color(0xFFFF8C42);
+    return const Color(0xFFDDDDDD);
+  }
+
+  Widget? _badge(VowelProgress v) { // ติกถูก / กากบาท
+    if (!_isDone(v) && !_isTried(v)) return null; // not tried → no badge
+    final done = _isDone(v);
+    return Positioned(
       top: 6,
       right: 6,
       child: CircleAvatar(
         radius: 10,
-        backgroundColor: Color(0xFF1A7A50),
-        child: Icon(Icons.check, size: 12, color: Colors.white),
+        backgroundColor:
+            done ? const Color(0xFF1A7A50) : const Color(0xFFFF8C42),
+        child: Icon(done ? Icons.check : Icons.close,
+            size: 12, color: Colors.white),
       ),
     );
   }
 
-  int get _completedVowels => vowels.where(_isDone).length;
+  int get _completedVowels => vowels.where(_isDone).length; // count completed vowels
 
+
+
+//main display
   @override
   Widget build(BuildContext context) {
     final title = widget.type == 'short'
@@ -120,7 +135,6 @@ class _VowelGridPageState extends State<VowelGridPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Title + badge row
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
@@ -135,8 +149,7 @@ class _VowelGridPageState extends State<VowelGridPage> {
                             ),
                           ),
                           Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 14, vertical: 6),
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                             decoration: BoxDecoration(
                               color: const Color(0xFF1A7A50),
                               borderRadius: BorderRadius.circular(20),
@@ -180,16 +193,16 @@ class _VowelGridPageState extends State<VowelGridPage> {
                           itemCount: vowels.length,
                           gridDelegate:
                               const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 3,
-                            crossAxisSpacing: 12,
-                            mainAxisSpacing: 12,
-                            childAspectRatio: 0.9,
+                            crossAxisCount: 3, // number of columns
+                            crossAxisSpacing: 12, // horizontal spacing between items
+                            mainAxisSpacing: 12, // vertical spacing between items
+                            childAspectRatio: 0.9, // width to height ratio of each item
                           ),
                           itemBuilder: (context, index) {
                             final v = vowels[index];
                             return GestureDetector(
                               onTap: () async {
-                                final lessons = await PracticeApi.fetchLessons(
+                                final lessons = await PracticeApi.fetchLessons( // #8
                                     firebaseUid, v.vowelId);
                                 final lessonOne = lessons
                                     .where((l) => l.lessonOrder == 1)

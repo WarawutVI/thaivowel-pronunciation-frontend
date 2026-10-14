@@ -77,7 +77,7 @@ class _ForgotState extends State<Forgot> {
       );
     }
   }
-
+//main display
   @override
   Widget build(BuildContext context) {
     return Scaffold(

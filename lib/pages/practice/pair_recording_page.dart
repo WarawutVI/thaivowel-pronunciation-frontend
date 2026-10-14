@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:frontend/pages/practice/practiceELM/pair_result_modal.dart';
 import 'package:frontend/pages/practice/practiceELM/phase_views.dart';
+import 'package:frontend/pages/practice/practiceELM/sample_player.dart';
 import 'package:frontend/services/language_controller.dart';
 import 'package:frontend/services/practice_api.dart';
 import 'package:get/get.dart';
@@ -15,14 +16,13 @@ import 'package:record/record.dart';
 
 enum _PairPhase { idle, getReady, recording, analyzing }
 
-/// Records a single take of two vowels spoken back-to-back (e.g. อะ → อา)
-/// and sends it to the backend's /predict_pair endpoint for a combined
-/// per-segment result, then saves it via POST /practice_pair_sessions.
+
 class PairRecordingPage extends StatefulWidget {
   final int shortVowelId;
   final String shortSymbol;
   final int longVowelId;
   final String longSymbol;
+  final bool longFirst;
   final bool isEnglish;
 
   const PairRecordingPage({
@@ -31,6 +31,7 @@ class PairRecordingPage extends StatefulWidget {
     required this.shortSymbol,
     required this.longVowelId,
     required this.longSymbol,
+    this.longFirst = false,
     this.isEnglish = true,
   });
 
@@ -44,13 +45,18 @@ class _PairRecordingPageState extends State<PairRecordingPage> {
 
   late bool isEnglish;
   final AudioRecorder _recorder = AudioRecorder();
+  late final SamplePlayer _samplePlayer;
 
   _PairPhase _phase = _PairPhase.idle;
   int _readyCountdown = _getReadySeconds;
   int _remainingSeconds = _recordSeconds;
   Timer? _countdownTimer;
 
-  String get _word => '${widget.shortSymbol} → ${widget.longSymbol}';
+  String get _firstSymbol =>
+      widget.longFirst ? widget.longSymbol : widget.shortSymbol;
+  String get _secondSymbol =>
+      widget.longFirst ? widget.shortSymbol : widget.longSymbol;
+  String get _word => '$_firstSymbol → $_secondSymbol';
   String get firebaseUid => FirebaseAuth.instance.currentUser!.uid;
   String t(String en, String th) => isEnglish ? en : th;
 
@@ -58,13 +64,39 @@ class _PairRecordingPageState extends State<PairRecordingPage> {
   void initState() {
     super.initState();
     isEnglish = Get.find<LanguageController>().isEnglish;
+    _samplePlayer = SamplePlayer(
+      onStateChanged: () {
+        if (mounted) setState(() {});
+      },
+    );
   }
 
   @override
   void dispose() {
     _countdownTimer?.cancel();
     _recorder.dispose();
+    _samplePlayer.dispose();
     super.dispose();
+  }
+
+  
+  Future<void> _toggleSample() {
+    final firstId = widget.longFirst ? widget.longVowelId : widget.shortVowelId;
+    final secondId = widget.longFirst
+        ? widget.shortVowelId
+        : widget.longVowelId;
+    return _samplePlayer.toggle(
+      'samples/pairs/${firstId}_$secondId',
+      onError: () => Get.snackbar(
+        t('No sample', 'ไม่มีเสียงตัวอย่าง'),
+        t(
+          'Sample audio for this vowel pair is not available yet',
+          'ยังไม่มีเสียงตัวอย่างสำหรับคู่สระนี้',
+        ),
+        backgroundColor: const Color(0xFF1A7A50),
+        colorText: Colors.white,
+      ),
+    );
   }
 
   Future<Uint8List> _getAudioBytes(String path) async {
@@ -72,7 +104,7 @@ class _PairRecordingPageState extends State<PairRecordingPage> {
       final res = await http.get(Uri.parse(path));
       return res.bodyBytes;
     }
-    return File(path).readAsBytes();
+    return File(path).readAsBytes(); // read directly document directory in mobile
   }
 
   Future<void> _beginFlow() async {
@@ -141,29 +173,36 @@ class _PairRecordingPageState extends State<PairRecordingPage> {
   }
 
   Future<void> _submitToApi(String filePath) async {
-    final recordStart =
-        DateTime.now().subtract(Duration(seconds: _recordSeconds));
+    final recordStart = DateTime.now().subtract(
+      Duration(seconds: _recordSeconds),
+    );
     try {
       final audioBytes = await _getAudioBytes(filePath);
+      final shortIndex = widget.shortVowelId - 1;
+      final longIndex = widget.longVowelId - 1;
+      // segment1 is always the vowel spoken first in the clip.
       final result = await PracticeApi.predictPair(
         audioBytes,
-        widget.shortVowelId - 1,
-        widget.longVowelId - 1,
+        widget.longFirst ? longIndex : shortIndex,
+        widget.longFirst ? shortIndex : longIndex,
       );
+      final shortSeg = widget.longFirst ? result.segment2 : result.segment1;
+      final longSeg = widget.longFirst ? result.segment1 : result.segment2;
       final duration = DateTime.now().difference(recordStart).inSeconds;
 
-      PracticeApi.savePairSession(
+      PracticeApi.savePairSession( // #10
         firebaseUid: firebaseUid,
         shortVowelId: widget.shortVowelId,
         longVowelId: widget.longVowelId,
-        confidenceShort: result.segment1.confidence,
-        confidenceLong: result.segment2.confidence,
-        assessmentLevelShort: result.segment1.assessmentLevel,
-        assessmentLevelLong: result.segment2.assessmentLevel,
-        userF1Short: result.segment1.userF1,
-        userF2Short: result.segment1.userF2,
-        userF1Long: result.segment2.userF1,
-        userF2Long: result.segment2.userF2,
+        longFirst: widget.longFirst,
+        confidenceShort: shortSeg.confidence,
+        confidenceLong: longSeg.confidence,
+        assessmentLevelShort: shortSeg.assessmentLevel,
+        assessmentLevelLong: longSeg.assessmentLevel,
+        userF1Short: shortSeg.userF1,
+        userF2Short: shortSeg.userF2,
+        userF1Long: longSeg.userF1,
+        userF2Long: longSeg.userF2,
         durationSeconds: duration,
       );
 
@@ -173,8 +212,8 @@ class _PairRecordingPageState extends State<PairRecordingPage> {
       showPairResultModal(
         context,
         isEnglish: isEnglish,
-        shortSymbol: widget.shortSymbol,
-        longSymbol: widget.longSymbol,
+        firstSymbol: _firstSymbol,
+        secondSymbol: _secondSymbol,
         segment1: result.segment1,
         segment2: result.segment2,
       );
@@ -190,6 +229,7 @@ class _PairRecordingPageState extends State<PairRecordingPage> {
     }
   }
 
+// main display
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -204,48 +244,70 @@ class _PairRecordingPageState extends State<PairRecordingPage> {
         title: Text(
           t('Practice', 'ฝึกพูด'),
           style: const TextStyle(
-              color: Colors.black87, fontWeight: FontWeight.bold),
+            color: Colors.black87,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 300),
-            child: switch (_phase) {
-              _PairPhase.idle => IdleView(
-                  word: _word,
-                  isEnglish: isEnglish,
-                  recordSeconds: _recordSeconds,
-                  onBeginFlow: _beginFlow,
-                  isPlayingSample: false,
-                  wordFontSize: 72,
-                  onToggleSample: () => Get.snackbar(
-                    t('No sample', 'ไม่มีเสียงตัวอย่าง'),
-                    t(
-                      'Sample audio for vowel pairs is not available yet',
-                      'ยังไม่มีเสียงตัวอย่างสำหรับคู่สระนี้',
-                    ),
-                    backgroundColor: const Color(0xFF1A7A50),
-                    colorText: Colors.white,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _directionLabel(),
+              const SizedBox(height: 16),
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                child: switch (_phase) {
+                  _PairPhase.idle => IdleView(
+                    word: _word,
+                    isEnglish: isEnglish,
+                    recordSeconds: _recordSeconds,
+                    onBeginFlow: _beginFlow,
+                    isPlayingSample: _samplePlayer.isPlaying,
+                    wordFontSize: 72,
+                    onToggleSample: _toggleSample,
                   ),
-                ),
-              _PairPhase.getReady => GetReadyView(
-                  word: _word,
-                  isEnglish: isEnglish,
-                  readyCountdown: _readyCountdown,
-                  getReadySeconds: _getReadySeconds,
-                ),
-              _PairPhase.recording => RecordingView(
-                  word: _word,
-                  isEnglish: isEnglish,
-                  remainingSeconds: _remainingSeconds,
-                  recordSeconds: _recordSeconds,
-                  wordFontSize: 48,
-                ),
-              _PairPhase.analyzing => AnalyzingView(isEnglish: isEnglish),
-            },
+                  _PairPhase.getReady => GetReadyView(
+                    word: _word,
+                    isEnglish: isEnglish,
+                    readyCountdown: _readyCountdown,
+                    getReadySeconds: _getReadySeconds,
+                  ),
+                  _PairPhase.recording => RecordingView(
+                    word: _word,
+                    isEnglish: isEnglish,
+                    remainingSeconds: _remainingSeconds,
+                    recordSeconds: _recordSeconds,
+                    wordFontSize: 48,
+                  ),
+                  _PairPhase.analyzing => AnalyzingView(isEnglish: isEnglish),
+                },
+              ),
+            ],
           ),
+        ),
+      ),
+    );
+  }
+
+ 
+  Widget _directionLabel() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+      decoration: BoxDecoration(
+        color: const Color(0xFF2A9B6A).withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        widget.longFirst
+            ? t('Start with Long Vowel', 'เริ่มจากสระเสียงยาว')
+            : t('Start with Short Vowel', 'เริ่มจากสระเสียงสั้น'),
+        style: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.bold,
+          color: Color(0xFF1A6B45),
         ),
       ),
     );

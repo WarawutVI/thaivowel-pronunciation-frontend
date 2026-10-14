@@ -42,7 +42,7 @@ const Map<String, String> _jsonHeaders = {
 };
 
 class PracticeApi {
-  // POST /users
+  // #3 POST /users
   static Future<void> createUser({
     required String firebaseUid,
     required String username,
@@ -71,7 +71,7 @@ class PracticeApi {
     }
   }
 
-  // GET /users?firebase_uid=X
+  // #1 GET /users?firebase_uid=X
   static Future<UserProfile> fetchUser(String firebaseUid) async {
     final uri = Uri.parse('$_base/users')
         .replace(queryParameters: {'firebase_uid': firebaseUid});
@@ -80,7 +80,7 @@ class PracticeApi {
     return UserProfile.fromJson(jsonDecode(res.body) as Map<String, dynamic>);
   }
 
-  // GET /vowels?type=short|long&firebase_uid=X
+  // #4 GET /vowels?type=short|long&firebase_uid=X
   static Future<List<VowelProgress>> fetchVowels(
       String firebaseUid, String type) async {
     final uri = Uri.parse('$_base/vowels')
@@ -91,7 +91,7 @@ class PracticeApi {
     return data.map((e) => VowelProgress.fromJson(e as Map<String, dynamic>)).toList();
   }
 
-  // GET /vowel_pairs?firebase_uid=X
+  // #7 GET /vowel_pairs?firebase_uid=X
   static Future<List<VowelPairProgress>> fetchVowelPairs(
       String firebaseUid) async {
     final uri = Uri.parse('$_base/vowel_pairs')
@@ -104,7 +104,7 @@ class PracticeApi {
         .toList();
   }
 
-  // GET /lessons?vowel_id=X&firebase_uid=Y
+  // #8 GET /lessons?vowel_id=X&firebase_uid=Y
   static Future<List<LessonProgress>> fetchLessons(
       String firebaseUid, int vowelId) async {
     final uri = Uri.parse('$_base/lessons').replace(queryParameters: {
@@ -155,11 +155,12 @@ class PracticeApi {
         jsonDecode(res.body) as Map<String, dynamic>);
   }
 
-  // POST /practice_pair_sessions
+  // #10 POST /practice_pair_sessions
   static Future<void> savePairSession({
     required String firebaseUid,
     required int shortVowelId,
     required int longVowelId,
+    required bool longFirst,
     required double confidenceShort,
     required double confidenceLong,
     required String assessmentLevelShort,
@@ -177,6 +178,7 @@ class PracticeApi {
         'firebase_uid': firebaseUid,
         'short_vowel_id': shortVowelId,
         'long_vowel_id': longVowelId,
+        'long_first': longFirst ? 1 : 0,
         'confidence_short': confidenceShort,
         'confidence_long': confidenceLong,
         'assessment_level_short': assessmentLevelShort,
@@ -190,7 +192,7 @@ class PracticeApi {
     );
   }
 
-  // POST /practice_sessions
+  // #9 POST /practice_sessions
   static Future<void> saveSession({
     required String firebaseUid,
     required int lessonId,
@@ -213,7 +215,7 @@ class PracticeApi {
     );
   }
 
-  // POST /user_lesson_progress (UPSERT)
+  // #11 POST /user_lesson_progress (UPSERT)
   static Future<void> saveProgress({
     required String firebaseUid,
     required int lessonId,
@@ -234,7 +236,7 @@ class PracticeApi {
     );
   }
 
-  // PUT /user_streaks
+  // #12 PUT /user_streaks
   static Future<void> updateStreak(String firebaseUid) async {
     await http.put(
       Uri.parse('$_base/user_streaks'),
@@ -243,7 +245,7 @@ class PracticeApi {
     );
   }
 
-  // GET /user_streaks?firebase_uid=X
+  //#14 GET /user_streaks?firebase_uid=X
   static Future<UserStreak> fetchStreak(String firebaseUid) async {
     final uri = Uri.parse('$_base/user_streaks')
         .replace(queryParameters: {'firebase_uid': firebaseUid});
@@ -252,7 +254,7 @@ class PracticeApi {
     return UserStreak.fromJson(jsonDecode(res.body) as Map<String, dynamic>);
   }
 
-  // GET /progress/summary?firebase_uid=X
+  // #15 GET /progress/summary?firebase_uid=X
   static Future<ProgressSummary> fetchSummary(String firebaseUid) async {
     final uri = Uri.parse('$_base/progress/summary')
         .replace(queryParameters: {'firebase_uid': firebaseUid});
@@ -261,7 +263,7 @@ class PracticeApi {
     return ProgressSummary.fromJson(jsonDecode(res.body) as Map<String, dynamic>);
   }
 
-  // GET /progress/vowel_stats?firebase_uid=X&type=short|long
+  // #16 GET /progress/vowel_stats?firebase_uid=X&type=short|long
   static Future<List<VowelStats>> fetchVowelStats(
       String firebaseUid, String type) async {
     final uri = Uri.parse('$_base/progress/vowel_stats')
@@ -272,7 +274,7 @@ class PracticeApi {
     return data.map((e) => VowelStats.fromJson(e as Map<String, dynamic>)).toList();
   }
 
-  // GET /practice_sessions/recent?firebase_uid=X&limit=N
+  // #17GET /practice_sessions/recent?firebase_uid=X&limit=N
   static Future<List<SessionRecord>> fetchRecentSessions(
       String firebaseUid, {int limit = 5}) async {
     final uri = Uri.parse('$_base/practice_sessions/recent').replace(
@@ -286,7 +288,7 @@ class PracticeApi {
     return data.map((e) => SessionRecord.fromJson(e as Map<String, dynamic>)).toList();
   }
 
-  // GET /vowels/:vowelId/formants
+  // #5 GET /vowels/:vowelId/formants
   static Future<VowelFormant> fetchVowelFormant(int vowelId) async {
     final res = await http.get(
       Uri.parse('$_base/vowels/$vowelId/formants'),
@@ -296,7 +298,7 @@ class PracticeApi {
     return VowelFormant.fromJson(jsonDecode(res.body) as Map<String, dynamic>);
   }
 
-  // GET /vowels/details
+  // #6 GET /vowels/details
   static Future<List<VowelDetail>> fetchVowelDetails() async {
     final res = await http.get(
       Uri.parse('$_base/vowels/details'),
@@ -307,7 +309,7 @@ class PracticeApi {
     return data.map((e) => VowelDetail.fromJson(e as Map<String, dynamic>)).toList();
   }
 
-  // GET /progress/trend
+  // #18 GET /progress/trend
   static Future<List<DailyTrend>> fetchTrend(
     String firebaseUid,
     String type, {
